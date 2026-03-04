@@ -345,7 +345,7 @@
 ---@field level number
 ---@field commandBufferCount number
 
----@class vk.DescriptorSetLayoutBinding: ffi.cdata*
+---@class vk.ffi.DescriptorSetLayoutBinding: ffi.cdata*
 ---@field binding number
 ---@field descriptorType number
 ---@field descriptorCount number
@@ -354,7 +354,7 @@
 
 ---@class vk.ffi.DescriptorSetLayoutCreateInfo: vk.ffi.BaseStruct
 ---@field bindingCount number?
----@field pBindings ffi.cdata*?
+---@field pBindings vk.ffi.DescriptorSetLayoutBinding[]?
 
 ---@class vk.ffi.DescriptorPoolSize: ffi.cdata*
 ---@field type number

@@ -812,7 +812,7 @@ return function(vk)
 	---@param layout vk.ffi.PipelineLayout
 	---@param firstSet number
 	---@param descriptorSetCount number
-	---@param descriptorSets ffi.cdata*
+	---@param descriptorSets vk.ffi.DescriptorSet[]
 	---@param dynamicOffsetCount number
 	---@param dynamicOffsets ffi.cdata*?
 	function VKDevice:cmdBindDescriptorSets(commandBuffer, pipelineBindPoint, layout, firstSet, descriptorSetCount,

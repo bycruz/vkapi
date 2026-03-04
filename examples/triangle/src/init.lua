@@ -341,11 +341,11 @@ local pipeline = device:createGraphicsPipelines(nil, { {
 
 	stages = {
 		{
-			stage = vk.ShaderStageFlagBits.VERTEX_BIT,
+			stage = vk.ShaderStageFlagBits.VERTEX,
 			module = vertexModule
 		},
 		{
-			stage = vk.ShaderStageFlagBits.FRAGMENT_BIT,
+			stage = vk.ShaderStageFlagBits.FRAGMENT,
 			module = fragmentModule
 		}
 	},

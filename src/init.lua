@@ -89,6 +89,9 @@ local vkEnums = require("vkapi.ffi.enums")
 ---@field DeviceSizeArray fun(count: number): vk.ffi.DeviceSize[]
 ---@field MemoryRequirementsArray fun(count: number): vk.ffi.MemoryRequirements[]
 ---@field PhysicalDeviceFeaturesArray fun(count: number): vk.ffi.PhysicalDeviceFeatures[]
+---@field DescriptorSetLayoutArray fun(count: number): vk.ffi.DescriptorSetLayout[]
+---@field DescriptorSetLayoutBindingArray fun(count: number): vk.ffi.DescriptorSetLayoutBinding[]
+---@field DescriptorSetArray fun(count: number): vk.ffi.DescriptorSet[]
 local vk = {}
 for k, v in pairs(vkEnums) do
 	vk[k] = v
@@ -199,6 +202,9 @@ do
 	defType("Buffer")
 	defType("DeviceSize")
 	defType("PhysicalDeviceFeatures")
+	defType("DescriptorSetLayout")
+	defType("DescriptorSetLayoutBinding")
+	defType("DescriptorSet")
 end
 
 -- Constants
