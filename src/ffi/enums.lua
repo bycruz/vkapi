@@ -820,4 +820,6 @@ vk.MemoryHeapFlagBits = {
 	DEVICE_LOCAL = 0x00000001,
 }
 
+vk.WHOLE_SIZE = bit.bnot(0ULL)
+
 return vk

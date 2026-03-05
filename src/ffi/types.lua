@@ -376,9 +376,9 @@
 ---@field range number
 
 ---@class vk.ffi.DescriptorImageInfo: ffi.cdata*
----@field sampler number
----@field imageView number
----@field imageLayout number
+---@field sampler vk.ffi.Sampler
+---@field imageView vk.ffi.ImageView
+---@field imageLayout vk.ImageLayout
 
 ---@class vk.ffi.WriteDescriptorSet: vk.ffi.BaseStruct
 ---@field dstSet vk.ffi.DescriptorSet
@@ -386,8 +386,8 @@
 ---@field dstArrayElement number
 ---@field descriptorCount number
 ---@field descriptorType number
----@field pImageInfo ffi.cdata*?
----@field pBufferInfo ffi.cdata*?
+---@field pImageInfo vk.ffi.DescriptorImageInfo[]?
+---@field pBufferInfo vk.ffi.DescriptorBufferInfo[]?
 ---@field pTexelBufferView ffi.cdata*?
 
 ---@class vk.ffi.SwapchainCreateInfoKHR: vk.ffi.BaseStruct
