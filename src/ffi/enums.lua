@@ -821,5 +821,6 @@ vk.MemoryHeapFlagBits = {
 }
 
 vk.WHOLE_SIZE = bit.bnot(0ULL)
+vk.REMAINING_ARRAY_LAYERS = bit.bnot(0ULL)
 
 return vk
