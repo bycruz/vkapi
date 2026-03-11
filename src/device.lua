@@ -751,10 +751,12 @@ return function(vk)
 		return commandBufferList
 	end
 
+	local nullBeginInfo = vk.CommandBufferBeginInfo()
+
 	---@param commandBuffer vk.ffi.CommandBuffer
 	---@param info vk.ffi.CommandBufferBeginInfo?
 	function VKDevice:beginCommandBuffer(commandBuffer, info)
-		local result = self.v1_0.vkBeginCommandBuffer(commandBuffer, info)
+		local result = self.v1_0.vkBeginCommandBuffer(commandBuffer, info or nullBeginInfo)
 		if result ~= 0 then
 			error("Failed to begin Vulkan command buffer, error code: " .. tostring(result))
 		end
@@ -1085,7 +1087,7 @@ return function(vk)
 	---@field vkAllocateDescriptorSets fun(device: vk.ffi.Device, info: ffi.cdata*, descriptorSets: ffi.cdata*): vk.ffi.Result
 	---@field vkUpdateDescriptorSets fun(device: vk.ffi.Device, writeCount: number, writes: ffi.cdata*, copyCount: number, copies: ffi.cdata*?)
 	---@field vkAllocateCommandBuffers fun(device: vk.ffi.Device, info: ffi.cdata*, commandBuffers: ffi.cdata*): vk.ffi.Result
-	---@field vkBeginCommandBuffer fun(commandBuffer: vk.ffi.CommandBuffer, info: ffi.cdata*): vk.ffi.Result
+	---@field vkBeginCommandBuffer fun(commandBuffer: vk.ffi.CommandBuffer, info: vk.ffi.CommandBufferBeginInfo?): vk.ffi.Result
 	---@field vkEndCommandBuffer fun(commandBuffer: vk.ffi.CommandBuffer): vk.ffi.Result
 	---@field vkCmdBeginRenderPass fun(commandBuffer: vk.ffi.CommandBuffer, info: ffi.cdata*, contents: vk.SubpassContents)
 	---@field vkCmdEndRenderPass fun(commandBuffer: vk.ffi.CommandBuffer)
