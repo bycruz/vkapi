@@ -222,7 +222,7 @@ end
 local VKInstance = require("vkapi.instance")(vk)
 
 do
-	local C = ffi.load("vulkan.so.1")
+	local C = jit.os == "Windows" and ffi.load("vulkan-1.dll") or ffi.load("vulkan.so.1")
 
 	---@class vk.ApplicationInfo
 	---@field name string
