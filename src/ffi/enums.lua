@@ -820,6 +820,17 @@ vk.MemoryHeapFlagBits = {
 	DEVICE_LOCAL = 0x00000001,
 }
 
+---@enum vk.CommandPoolResetFlagBits
+vk.CommandPoolResetFlagBits = {
+	RELEASE_RESOURCES = 0x00000001,
+}
+
+---@enum vk.CommandBufferResetFlagBits
+vk.CommandBufferResetFlagBits = {
+	RELEASE_RESOURCES = 0x00000001,
+}
+
+
 vk.WHOLE_SIZE = bit.bnot(0ULL)
 vk.REMAINING_ARRAY_LAYERS = bit.bnot(0ULL)
 vk.REMAINING_MIP_LEVELS = bit.bnot(0ULL)

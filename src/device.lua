@@ -622,11 +622,20 @@ return function(vk)
 	end
 
 	---@param commandPool vk.ffi.CommandPool
-	---@param flags number?
+	---@param flags vk.CommandPoolResetFlagBits?
 	function VKDevice:resetCommandPool(commandPool, flags)
 		local result = self.v1_0.vkResetCommandPool(self.handle, commandPool, flags or 0)
 		if result ~= 0 then
 			error("Failed to reset command pool, error code: " .. tostring(result))
+		end
+	end
+
+	---@param commandBuffer vk.ffi.CommandBuffer
+	---@param flags vk.CommandBufferResetFlagBits?
+	function VKDevice:resetCommandBuffer(commandBuffer, flags)
+		local result = self.v1_0.vkResetCommandBuffer(commandBuffer, flags or 0)
+		if result ~= 0 then
+			error("Failed to reset command buffer, error code: " .. tostring(result))
 		end
 	end
 
@@ -745,8 +754,7 @@ return function(vk)
 	---@param commandBuffer vk.ffi.CommandBuffer
 	---@param info vk.ffi.CommandBufferBeginInfo?
 	function VKDevice:beginCommandBuffer(commandBuffer, info)
-		local beginInfo = vk.CommandBufferBeginInfo(info)
-		local result = self.v1_0.vkBeginCommandBuffer(commandBuffer, beginInfo)
+		local result = self.v1_0.vkBeginCommandBuffer(commandBuffer, info)
 		if result ~= 0 then
 			error("Failed to begin Vulkan command buffer, error code: " .. tostring(result))
 		end
@@ -1123,7 +1131,8 @@ return function(vk)
 	---@field vkDestroyFence fun(device: vk.ffi.Device, fence: vk.ffi.Fence, allocator: ffi.cdata*?)
 	---@field vkDestroySwapchainKHR fun(device: vk.ffi.Device, swapchain: vk.ffi.SwapchainKHR, allocator: ffi.cdata*?)
 	---@field vkDestroyDescriptorPool fun(device: vk.ffi.Device, pool: vk.ffi.DescriptorPool, allocator: ffi.cdata*?)
-	---@field vkResetCommandPool fun(device: vk.ffi.Device, commandPool: vk.ffi.CommandPool, flags: number): vk.ffi.Result
+	---@field vkResetCommandPool fun(device: vk.ffi.Device, commandPool: vk.ffi.CommandPool, flags: vk.CommandPoolResetFlagBits): vk.ffi.Result
+	---@field vkResetCommandBuffer fun(commandBuffer: vk.ffi.CommandBuffer, flags: vk.CommandBufferResetFlagBits): vk.ffi.Result
 
 	---@param handle vk.ffi.Device
 	function VKDevice.new(handle)
@@ -1192,6 +1201,7 @@ return function(vk)
 			vkDestroyPipelineLayout = "void(*)(VkDevice, VkPipelineLayout, const VkAllocationCallbacks*)",
 			vkFreeMemory = "void(*)(VkDevice, VkDeviceMemory, const VkAllocationCallbacks*)",
 			vkResetCommandPool = "VkResult(*)(VkDevice, VkCommandPool, VkFlags)",
+			vkResetCommandBuffer = "VkResult(*)(VkCommandBuffer, VkFlags)",
 			vkCmdPipelineBarrier = "void(*)(VkCommandBuffer, VkFlags, VkFlags, VkFlags, uint32_t, const void*, uint32_t, const void*, uint32_t, const VkImageMemoryBarrier*)",
 			vkCreateComputePipelines = "VkResult(*)(VkDevice, uint64_t, uint32_t, const VkComputePipelineCreateInfo*, const VkAllocationCallbacks*, VkPipeline*)",
 			vkCmdDispatch = "void(*)(VkCommandBuffer, uint32_t, uint32_t, uint32_t)",
