@@ -117,9 +117,12 @@ return function(vk)
 	function VKInstance:createWin32SurfaceKHR(createInfo, allocator)
 		local surface = ffi.new("VkSurfaceKHR[1]")
 
-		local createInfo = vk.Win32SurfaceCreateInfoKHR(createInfo)
+		-- Need to cast these to void* as they'll probably be passed as just lua numbers
+		local info = vk.Win32SurfaceCreateInfoKHR()
+		info.hwnd = ffi.cast("void*", createInfo.hwnd)
+		info.hinstance = ffi.cast("void*", createInfo.hinstance)
 
-		local result = self.v1_0.vkCreateWin32SurfaceKHR(self.handle, createInfo, allocator, surface)
+		local result = self.v1_0.vkCreateWin32SurfaceKHR(self.handle, info, allocator, surface)
 		if result ~= 0 then
 			error("Failed to create Win32 surface, error code: " .. tostring(result))
 		end
@@ -131,7 +134,7 @@ return function(vk)
 	---@field vkCreateDevice fun(physicalDevice: vk.ffi.PhysicalDevice, info: vk.ffi.DeviceCreateInfo?, allocator: ffi.cdata*?, device: vk.ffi.Device*): vk.ffi.Result
 	---@field vkEnumeratePhysicalDevices fun(instance: vk.ffi.Instance, count: ffi.cdata*, devices: ffi.cdata*?): vk.ffi.Result
 	---@field vkCreateXlibSurfaceKHR fun(instance: vk.ffi.Instance, info: ffi.cdata*, allocator: ffi.cdata*?, surface: ffi.cdata*): vk.ffi.Result
-	---@field vkCreateWin32SurfaceKHR fun(instance: vk.ffi.Instance, info: ffi.cdata*, allocator: ffi.cdata*?, surface: ffi.cdata*): vk.ffi.Result
+	---@field vkCreateWin32SurfaceKHR fun(instance: vk.ffi.Instance, info: vk.ffi.Win32SurfaceCreateInfoKHR, allocator: ffi.cdata*?, surface: ffi.cdata*): vk.ffi.Result
 
 	---@param handle vk.ffi.Instance
 	function VKInstance.new(handle)
