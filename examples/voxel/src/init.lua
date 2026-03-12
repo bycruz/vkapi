@@ -82,18 +82,29 @@ local function findMemoryType(requiredBits, propertyFlags)
 	error("No suitable memory type found")
 end
 
-local HOST_FLAGS = bit.bor(vk.MemoryPropertyFlagBits.HOST_VISIBLE, vk.MemoryPropertyFlagBits.HOST_COHERENT)
+local HOST_FLAGS   = bit.bor(vk.MemoryPropertyFlagBits.HOST_VISIBLE, vk.MemoryPropertyFlagBits.HOST_COHERENT)
+local DEVICE_FLAGS = vk.MemoryPropertyFlagBits.DEVICE_LOCAL
 
 local function createHostBuffer(size, usage)
 	local buf = device:createBuffer({ size = size, usage = usage })
 	local req = device:getBufferMemoryRequirements(buf)
 	local mem = device:allocateMemory({
 		allocationSize = req.size,
-		memoryTypeIndex = findMemoryType(req.memoryTypeBits,
-			HOST_FLAGS)
+		memoryTypeIndex = findMemoryType(req.memoryTypeBits, HOST_FLAGS)
 	})
 	device:bindBufferMemory(buf, mem, 0)
 	return buf, mem, req.size
+end
+
+local function createDeviceBuffer(size, usage)
+	local buf = device:createBuffer({ size = size, usage = bit.bor(usage, vk.BufferUsageFlagBits.TRANSFER_DST) })
+	local req = device:getBufferMemoryRequirements(buf)
+	local mem = device:allocateMemory({
+		allocationSize = req.size,
+		memoryTypeIndex = findMemoryType(req.memoryTypeBits, DEVICE_FLAGS)
+	})
+	device:bindBufferMemory(buf, mem, 0)
+	return buf
 end
 
 -- ─── Depth image ─────────────────────────────────────────────────────────────
@@ -319,7 +330,7 @@ local pipeline = device:createGraphicsPipelines(nil, { {
 
 	rasterizationState = {
 		polygonMode = vk.PolygonMode.FILL,
-		cullMode    = vk.CullModeFlagBits.BACK,
+		cullMode    = vk.CullModeFlagBits.NONE,
 		frontFace   = vk.FrontFace.COUNTER_CLOCKWISE,
 		lineWidth   = 1.0,
 	},
@@ -352,7 +363,7 @@ local pipeline = device:createGraphicsPipelines(nil, { {
 
 -- ─── World generation ─────────────────────────────────────────────────────────
 
-local CX, CY, CZ = 32, 16, 32
+local CX, CY, CZ = 256, 64, 256
 
 local world = {}
 for x = 0, CX - 1 do
@@ -360,16 +371,17 @@ for x = 0, CX - 1 do
 	for y = 0, CY - 1 do
 		world[x][y] = {}
 		for z = 0, CZ - 1 do
-			local height = 4
-				+ math.floor(3 * math.sin(x * 0.4) * math.cos(z * 0.4))
-				+ math.floor(2 * math.sin(x * 0.15 + 1.2) * math.cos(z * 0.2 + 0.7))
+			local height = 12
+				+ math.floor(8 * math.sin(x * 0.04) * math.cos(z * 0.04))
+				+ math.floor(4 * math.sin(x * 0.015 + 1.2) * math.cos(z * 0.02 + 0.7))
+				+ math.floor(2 * math.sin(x * 0.08 + 3.1) * math.cos(z * 0.07 + 2.0))
 			world[x][y][z] = (y <= height) and 1 or 0
 		end
 	end
 end
 
 local function getVoxel(x, y, z)
-	if x < 0 or x >= CX or y < 0 or y >= CY or z < 0 or z >= CZ then return 0 end
+	if x < 0 or x >= CX or y < 0 or y >= CY or z < 0 or z >= CZ then return 1 end
 	return world[x][y][z]
 end
 
@@ -448,21 +460,52 @@ local indexCount = #indices
 -- ─── Upload mesh ─────────────────────────────────────────────────────────────
 
 local vbSize = #vertices * ffi.sizeof("float")
-local vertexBuffer, vbMem = createHostBuffer(vbSize, vk.BufferUsageFlagBits.VERTEX_BUFFER)
+local ibSize = #indices  * ffi.sizeof("uint32_t")
+
+local stagingVB, stagingVBMem = createHostBuffer(vbSize, vk.BufferUsageFlagBits.TRANSFER_SRC)
+local stagingIB, stagingIBMem = createHostBuffer(ibSize, vk.BufferUsageFlagBits.TRANSFER_SRC)
+
 do
-	local req = device:getBufferMemoryRequirements(vertexBuffer)
-	local ptr = ffi.cast("float*", device:mapMemory(vbMem, 0, req.size))
+	local ptr = ffi.cast("float*",    device:mapMemory(stagingVBMem, 0, vbSize))
 	for i, v in ipairs(vertices) do ptr[i - 1] = v end
-	device:unmapMemory(vbMem)
+	device:unmapMemory(stagingVBMem)
+end
+do
+	local ptr = ffi.cast("uint32_t*", device:mapMemory(stagingIBMem, 0, ibSize))
+	for i, v in ipairs(indices)  do ptr[i - 1] = v end
+	device:unmapMemory(stagingIBMem)
 end
 
-local ibSize = #indices * ffi.sizeof("uint32_t")
-local indexBuffer, ibMem = createHostBuffer(ibSize, vk.BufferUsageFlagBits.INDEX_BUFFER)
+local vertexBuffer = createDeviceBuffer(vbSize, vk.BufferUsageFlagBits.VERTEX_BUFFER)
+local indexBuffer  = createDeviceBuffer(ibSize, vk.BufferUsageFlagBits.INDEX_BUFFER)
+
 do
-	local req = device:getBufferMemoryRequirements(indexBuffer)
-	local ptr = ffi.cast("uint32_t*", device:mapMemory(ibMem, 0, req.size))
-	for i, v in ipairs(indices) do ptr[i - 1] = v end
-	device:unmapMemory(ibMem)
+	local transferPool = device:createCommandPool({ queueFamilyIndex = queueFamilyIdx })
+	local cb = device:allocateCommandBuffers({
+		commandPool = transferPool,
+		level = vk.CommandBufferLevel.PRIMARY,
+		commandBufferCount = 1,
+	})[1]
+
+	device:beginCommandBuffer(cb, vk.CommandBufferBeginInfo({
+		flags = vk.CommandBufferUsageFlagBits.ONE_TIME_SUBMIT
+	}))
+
+	local vbRegion = vk.BufferCopyArray(1)
+	vbRegion[0] = { srcOffset = 0, dstOffset = 0, size = vbSize }
+	local ibRegion = vk.BufferCopyArray(1)
+	ibRegion[0] = { srcOffset = 0, dstOffset = 0, size = ibSize }
+	device:cmdCopyBuffer(cb, stagingVB, vertexBuffer, 1, vbRegion)
+	device:cmdCopyBuffer(cb, stagingIB, indexBuffer,  1, ibRegion)
+
+	device:endCommandBuffer(cb)
+
+	local submitCBs = vk.CommandBufferArray(1)
+	submitCBs[0] = cb
+	local transferSubmit = vk.SubmitInfoArray(1)
+	transferSubmit[0] = vk.SubmitInfo({ commandBufferCount = 1, pCommandBuffers = submitCBs })
+	device:queueSubmit(queue, 1, transferSubmit, nil)
+	device:queueWaitIdle(queue)
 end
 
 -- ─── Sync objects ─────────────────────────────────────────────────────────────
@@ -532,8 +575,8 @@ end
 
 local cam = {
 	x = CX * 0.5,
-	y = 10,
-	z = CZ * 0.5 + 20,
+	y = 30,
+	z = CZ * 0.5 + 50,
 	yaw = math.pi, -- looking toward -Z initially
 	pitch = -0.25,
 	speed = 10.0,
@@ -542,6 +585,7 @@ local cam = {
 local keys = {}
 local cursorGrabbed = false
 local lastTime = os.clock()
+local dt = 0
 
 local function camForward()
 	return math.sin(cam.yaw) * math.cos(cam.pitch),
@@ -654,7 +698,7 @@ local currentFrame = 1
 
 local function draw()
 	local now = os.clock()
-	local dt = now - lastTime
+	dt = now - lastTime
 	lastTime = now
 
 	updateCamera(dt)
@@ -703,6 +747,8 @@ end
 -- ─── Event loop ───────────────────────────────────────────────────────────────
 
 eventLoop:run(function(event, handler)
+	handler:setMode("poll")
+
 	if event.name == "redraw" then
 		draw()
 	elseif event.name == "windowClose" then
