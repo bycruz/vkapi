@@ -1,0 +1,8 @@
+{
+	"name": "voxel",
+	"version": "0.1.0",
+	"dependencies": {
+		"vkapi": { "path": "../.." },
+		"winit": { "git": "https://github.com/codebycruz/winit" }
+	}
+}
