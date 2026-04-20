@@ -830,6 +830,16 @@ return function(vk)
 	end
 
 	---@param commandBuffer vk.ffi.CommandBuffer
+	---@param srcImage vk.ffi.Image
+	---@param srcImageLayout vk.ImageLayout
+	---@param dstBuffer vk.ffi.Buffer
+	---@param regionCount number
+	---@param pRegions ffi.cdata*
+	function VKDevice:cmdCopyImageToBuffer(commandBuffer, srcImage, srcImageLayout, dstBuffer, regionCount, pRegions)
+		self.v1_0.vkCmdCopyImageToBuffer(commandBuffer, srcImage, srcImageLayout, dstBuffer, regionCount, pRegions)
+	end
+
+	---@param commandBuffer vk.ffi.CommandBuffer
 	---@param srcBuffer vk.ffi.Buffer
 	---@param dstBuffer vk.ffi.Buffer
 	---@param regionCount number
@@ -1103,6 +1113,7 @@ return function(vk)
 	---@field vkCmdDraw fun(commandBuffer: vk.ffi.CommandBuffer, vertexCount: number, instanceCount: number, firstVertex: number, firstInstance: number)
 	---@field vkCmdUpdateBuffer fun(commandBuffer: vk.ffi.CommandBuffer, dstBuffer: vk.ffi.Buffer, dstOffset: number, dataSize: number, pData: ffi.cdata*)
 	---@field vkCmdCopyBufferToImage fun(commandBuffer: vk.ffi.CommandBuffer, srcBuffer: vk.ffi.Buffer, dstImage: vk.ffi.Image, dstImageLayout: vk.ImageLayout, regionCount: number, pRegions: ffi.cdata*)
+	---@field vkCmdCopyImageToBuffer fun(commandBuffer: vk.ffi.CommandBuffer, srcImage: vk.ffi.Image, srcImageLayout: vk.ImageLayout, dstBuffer: vk.ffi.Buffer, regionCount: number, pRegions: ffi.cdata*)
 	---@field vkCmdCopyBuffer fun(commandBuffer: vk.ffi.CommandBuffer, srcBuffer: vk.ffi.Buffer, dstBuffer: vk.ffi.Buffer, regionCount: number, pRegions: ffi.cdata*)
 	---@field vkCmdSetViewport fun(commandBuffer: vk.ffi.CommandBuffer, firstViewport: number, viewportCount: number, pViewports: ffi.cdata*)
 	---@field vkCmdSetScissor fun(commandBuffer: vk.ffi.CommandBuffer, firstScissor: number, scissorCount: number, pScissors: ffi.cdata*)
@@ -1178,6 +1189,7 @@ return function(vk)
 			vkCmdDraw = "void(*)(VkCommandBuffer, uint32_t, uint32_t, uint32_t, uint32_t)",
 			vkCmdBindDescriptorSets = "void(*)(VkCommandBuffer, VkPipelineBindPoint, VkPipelineLayout, uint32_t, uint32_t, const VkDescriptorSet*, uint32_t, const uint32_t*)",
 			vkCmdCopyBufferToImage = "void(*)(VkCommandBuffer, VkBuffer, VkImage, VkImageLayout, uint32_t, const VkBufferImageCopy*)",
+			vkCmdCopyImageToBuffer = "void(*)(VkCommandBuffer, VkImage, VkImageLayout, VkBuffer, uint32_t, const VkBufferImageCopy*)",
 			vkCmdCopyBuffer = "void(*)(VkCommandBuffer, VkBuffer, VkBuffer, uint32_t, const VkBufferCopy*)",
 			vkCmdUpdateBuffer = "void(*)(VkCommandBuffer, VkBuffer, VkDeviceSize, VkDeviceSize, const void*)",
 			vkCmdSetViewport = "void(*)(VkCommandBuffer, uint32_t, uint32_t, const VkViewport*)",

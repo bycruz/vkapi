@@ -1015,6 +1015,11 @@ void vkCmdCopyBufferToImage(VkCommandBuffer commandBuffer, VkBuffer srcBuffer,
                             uint32_t regionCount,
                             const VkBufferImageCopy *pRegions);
 
+void vkCmdCopyImageToBuffer(VkCommandBuffer commandBuffer, VkImage srcImage,
+                            VkImageLayout srcImageLayout, VkBuffer dstBuffer,
+                            uint32_t regionCount,
+                            const VkBufferImageCopy *pRegions);
+
 typedef struct {
   VkDeviceSize srcOffset;
   VkDeviceSize dstOffset;
