@@ -1,3 +1,2 @@
-/target/
-/lpm.lock # Reserved for future use
-/lpm-lock.json
+target
+lde.lock

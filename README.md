@@ -10,10 +10,10 @@ Cross-platform low level Vulkan bindings for LuaJIT.
 
 ## Installation
 
-This is intended to be used with the [lpm package manager](https://github.com/codebycruz/lpm)
+This is intended to be used with [lde](https://lde.sh)
 
 ```bash
-lpm add vkapi --git https://github.com/codebycruz/vkapi
+lde add vkapi --git https://github.com/bycruz/vkapi
 ```
 
 ## Example
