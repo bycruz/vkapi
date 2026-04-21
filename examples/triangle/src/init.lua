@@ -13,7 +13,7 @@ local instance = vk.createInstance({
 		version = 1.0,
 		engineName = "vkapi",
 		engineVersion = 1.0,
-		apiVersion = vk.ApiVersion.V1_0,
+		apiVersion = vk.ApiVersion.V1_0
 	}
 })
 
@@ -48,9 +48,9 @@ local device = instance:createDevice(physicalDevice, {
 		{
 			queueFamilyIndex = queueFamilyIdx,
 			queuePriorities = { 1.0 },
-			queueCount = 1,
-		},
-	},
+			queueCount = 1
+		}
+	}
 })
 
 local eventLoop = winit.EventLoop.new()
@@ -63,12 +63,12 @@ local surface
 if ffi.os == "Linux" then ---@cast window winit.x11.Window
 	surface = instance:createXlibSurfaceKHR({
 		dpy = window.display,
-		window = window.id,
+		window = window.id
 	})
 elseif ffi.os == "Windows" then ---@cast window winit.win32.Window
 	surface = instance:createWin32SurfaceKHR({
 		hinstance = window.id,
-		hwnd = window.hwnd,
+		hwnd = window.hwnd
 	})
 else
 	error("Unsupported platform: " .. ffi.os)
@@ -85,7 +85,7 @@ local renderPass = device:createRenderPass({
 			storeOp = vk.AttachmentStoreOp.STORE,
 			stencilLoadOp = vk.AttachmentLoadOp.DONT_CARE,
 			initialLayout = vk.ImageLayout.UNDEFINED,
-			finalLayout = vk.ImageLayout.PRESENT_SRC_KHR,
+			finalLayout = vk.ImageLayout.PRESENT_SRC_KHR
 		}
 	},
 	subpasses = {
@@ -114,7 +114,7 @@ local swapchain = device:createSwapchainKHR({
 	compositeAlpha = vk.CompositeAlphaFlagBitsKHR.OPAQUE,
 	presentMode = vk.PresentModeKHR.IMMEDIATE,
 	clipped = 1,
-	oldSwapchain = nil,
+	oldSwapchain = nil
 })
 
 local swapchainImages = device:getSwapchainImagesKHR(swapchain)
@@ -132,13 +132,13 @@ for i, image in ipairs(swapchainImages) do
 			baseMipLevel = 0,
 			levelCount = 1,
 			baseArrayLayer = 0,
-			layerCount = 1,
+			layerCount = 1
 		},
 		components = {
 			r = vk.ComponentSwizzle.IDENTITY,
 			g = vk.ComponentSwizzle.IDENTITY,
 			b = vk.ComponentSwizzle.IDENTITY,
-			a = vk.ComponentSwizzle.IDENTITY,
+			a = vk.ComponentSwizzle.IDENTITY
 		}
 	})
 
@@ -174,7 +174,7 @@ for i = 1, #swapchainImages do
 	commandBuffers[i] = device:allocateCommandBuffers({
 		commandPool = commandPools[i],
 		level = vk.CommandBufferLevel.PRIMARY,
-		commandBufferCount = 1,
+		commandBufferCount = 1
 	})[1]
 end
 
@@ -189,7 +189,7 @@ do
 	local code = io.open(projectFolder .. "shaders" .. pathSep .. "triangle.vert.spv", "rb"):read("*a")
 	vertexModule = device:createShaderModule({
 		codeSize = #code,
-		pCode = ffi.cast("const uint32_t*", code),
+		pCode = ffi.cast("const uint32_t*", code)
 	})
 end
 
@@ -198,13 +198,13 @@ do
 	local code = io.open(projectFolder .. "shaders" .. pathSep .. "triangle.frag.spv", "rb"):read("*a")
 	fragmentModule = device:createShaderModule({
 		codeSize = #code,
-		pCode = ffi.cast("const uint32_t*", code),
+		pCode = ffi.cast("const uint32_t*", code)
 	})
 end
 
 local vertexBuffer = device:createBuffer({
 	size = 3 * ffi.sizeof("float") * 7, -- 3 vertices, each with 3 floats for position and 4 for color
-	usage = vk.BufferUsageFlagBits.VERTEX_BUFFER,
+	usage = vk.BufferUsageFlagBits.VERTEX_BUFFER
 })
 
 do
@@ -245,7 +245,7 @@ end
 
 local indexBuffer = device:createBuffer({
 	size = 3 * ffi.sizeof("uint16_t"),
-	usage = vk.BufferUsageFlagBits.INDEX_BUFFER,
+	usage = vk.BufferUsageFlagBits.INDEX_BUFFER
 })
 
 
@@ -284,11 +284,11 @@ local pipeline = device:createGraphicsPipelines(nil, { {
 		polygonMode = vk.PolygonMode.FILL,
 		cullMode = vk.CullModeFlagBits.BACK,
 		frontFace = vk.FrontFace.CLOCKWISE,
-		lineWidth = 1.0,
+		lineWidth = 1.0
 	},
 
 	multisampleState = {
-		rasterizationSamples = vk.SampleCountFlagBits.COUNT_1,
+		rasterizationSamples = vk.SampleCountFlagBits.COUNT_1
 	},
 
 	vertexInputState = {
@@ -297,27 +297,27 @@ local pipeline = device:createGraphicsPipelines(nil, { {
 				location = 0,
 				binding = 0,
 				format = vk.Format.R32G32B32_SFLOAT,
-				offset = 0,
+				offset = 0
 			},
 			{
 				location = 1,
 				binding = 0,
 				format = vk.Format.R32G32B32A32_SFLOAT,
-				offset = 12,
+				offset = 12
 			}
 		},
 		bindings = {
 			{
 				binding = 0,
 				stride = 28,
-				inputRate = vk.VertexInputRate.VERTEX,
+				inputRate = vk.VertexInputRate.VERTEX
 			}
 		}
 	},
 
 	inputAssemblyState = {
 		topology = vk.PrimitiveTopology.TRIANGLE_LIST,
-		primitiveRestartEnable = false,
+		primitiveRestartEnable = false
 	},
 
 	colorBlendState = {
@@ -329,20 +329,20 @@ local pipeline = device:createGraphicsPipelines(nil, { {
 					vk.ColorComponentFlagBits.B,
 					vk.ColorComponentFlagBits.A
 				),
-				blendEnable = false,
+				blendEnable = false
 			}
 		}
 	},
 
 	viewportState = {
 		viewportCount = 1,
-		scissorCount = 1,
+		scissorCount = 1
 	},
 
 	dynamicState = {
 		dynamicStates = {
 			vk.DynamicState.VIEWPORT,
-			vk.DynamicState.SCISSOR,
+			vk.DynamicState.SCISSOR
 		}
 	},
 
@@ -362,7 +362,7 @@ local pipeline = device:createGraphicsPipelines(nil, { {
 local scissors = vk.Rect2DArray(1)
 scissors[0] = {
 	offset = { x = 0, y = 0 },
-	extent = { width = 800, height = 600 },
+	extent = { width = 800, height = 600 }
 }
 
 local viewports = vk.ViewportArray(1)
@@ -372,7 +372,7 @@ viewports[0] = {
 	width = 800,
 	height = 600,
 	minDepth = 0.0,
-	maxDepth = 1.0,
+	maxDepth = 1.0
 }
 
 local renderPassBeginInfo = vk.RenderPassBeginInfo()
@@ -380,7 +380,7 @@ renderPassBeginInfo.renderPass = renderPass
 renderPassBeginInfo.framebuffer = framebuffers[1]
 renderPassBeginInfo.renderArea = {
 	offset = { x = 0, y = 0 },
-	extent = { width = 800, height = 600 },
+	extent = { width = 800, height = 600 }
 }
 renderPassBeginInfo.clearValueCount = 1
 
@@ -428,7 +428,7 @@ queueSubmits[0] = vk.SubmitInfo({
 	commandBufferCount = 1,
 	pCommandBuffers = commandBuffersToSubmit,
 	signalSemaphoreCount = signalSemaphoresLen,
-	pSignalSemaphores = signalSemaphores,
+	pSignalSemaphores = signalSemaphores
 })
 
 local vertexBuffers = vk.BufferArray(1)
@@ -450,6 +450,72 @@ local beginInfo = vk.CommandBufferBeginInfo({
 	flags = vk.CommandBufferUsageFlagBits.SIMULTANEOUS_USE
 })
 
+local function recreateSwapchain()
+	device:queueWaitIdle(queue)
+
+	for _, fb in ipairs(framebuffers) do device:destroyFramebuffer(fb) end
+	for _, iv in ipairs(imageViews) do device:destroyImageView(iv) end
+
+	local oldSwapchain = swapchain
+	swapchain = device:createSwapchainKHR({
+		surface = surface,
+		minImageCount = 3,
+		imageFormat = desiredFormat,
+		imageColorSpace = vk.ColorSpaceKHR.SRGB_NONLINEAR,
+		imageExtent = { width = window.width, height = window.height },
+		imageArrayLayers = 1,
+		imageUsage = vk.ImageUsageFlagBits.COLOR_ATTACHMENT,
+		imageSharingMode = vk.SharingMode.EXCLUSIVE,
+		preTransform = vk.SurfaceTransformFlagBitsKHR.IDENTITY,
+		compositeAlpha = vk.CompositeAlphaFlagBitsKHR.OPAQUE,
+		presentMode = vk.PresentModeKHR.IMMEDIATE,
+		clipped = 1,
+		oldSwapchain = oldSwapchain
+	})
+	device:destroySwapchainKHR(oldSwapchain)
+
+	imageViews = {}
+	framebuffers = {}
+	for i, image in ipairs(device:getSwapchainImagesKHR(swapchain)) do
+		local iv = device:createImageView({
+			image = image,
+			viewType = vk.ImageViewType.TYPE_2D,
+			format = desiredFormat,
+			subresourceRange = {
+				aspectMask = vk.ImageAspectFlagBits.COLOR,
+				baseMipLevel = 0,
+				levelCount = 1,
+				baseArrayLayer = 0,
+				layerCount = 1
+			},
+			components = {
+				r = vk.ComponentSwizzle.IDENTITY,
+				g = vk.ComponentSwizzle.IDENTITY,
+				b = vk.ComponentSwizzle.IDENTITY,
+				a = vk.ComponentSwizzle.IDENTITY
+			}
+		})
+		imageViews[i] = iv
+		local attachments = vk.ImageViewArray(1)
+		attachments[0] = iv
+		framebuffers[i] = device:createFramebuffer({
+			renderPass = renderPass,
+			width = window.width,
+			height = window.height,
+			layers = 1,
+			attachmentCount = 1,
+			pAttachments = attachments
+		})
+	end
+
+	scissors[0].extent.width = window.width
+	scissors[0].extent.height = window.height
+	viewports[0].width = window.width
+	viewports[0].height = window.height
+	renderPassBeginInfo.renderArea.extent.width = window.width
+	renderPassBeginInfo.renderArea.extent.height = window.height
+end
+
 local currentFrame = 1
 local function draw()
 	local imgSemaphore = imageAvailableSemaphores[currentFrame]
@@ -461,16 +527,17 @@ local function draw()
 	currentFrame = currentFrame % fencesLen + 1
 
 	device:waitForFences(1, fences + frameOffset, true, math.huge)
+
+	-- Acquire the next image using the current frame's semaphore
+	local acquireResult, imageIndex = device:acquireNextImageKHR(swapchain, -1, imgSemaphore, nil)
+	if acquireResult == vk.Result.ERROR_OUT_OF_DATE_KHR then
+		return
+	end
+
 	device:resetFences(1, fences + frameOffset)
 	device:resetCommandBuffer(commandBuffer)
 
 	commandBuffersToSubmit[0] = commandBuffer
-
-	-- Acquire the next image using the current frame's semaphore
-	local acquireResult, imageIndex = device:acquireNextImageKHR(swapchain, -1, imgSemaphore, nil)
-	if acquireResult ~= vk.Result.SUCCESS then
-		return acquireResult
-	end
 
 	-- Track which semaphore was used for this image
 	imageAcquireSemaphoreForImage[imageIndex + 1] = imgSemaphore
@@ -500,12 +567,14 @@ local function draw()
 	device:endCommandBuffer(commandBuffer)
 
 	device:queueSubmit(queue, 1, queueSubmits, fence)
-	return device:queuePresentKHR(queue, swapchain, imageIndex, renderSemaphore)
+	device:queuePresentKHR(queue, swapchain, imageIndex, renderSemaphore)
 end
 
 eventLoop:run(function(event, handler)
 	if event.name == "redraw" then
 		draw()
+	elseif event.name == "resize" then
+		recreateSwapchain()
 	elseif event.name == "windowClose" then
 		handler:exit()
 	elseif event.name == "aboutToWait" then

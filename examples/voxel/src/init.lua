@@ -109,46 +109,52 @@ end
 
 -- ─── Depth image ─────────────────────────────────────────────────────────────
 
-local depthImage = device:createImage({
-	imageType = vk.ImageType.TYPE_2D,
-	format = depthFormat,
-	extent = { width = W, height = H, depth = 1 },
-	mipLevels = 1,
-	arrayLayers = 1,
-	samples = vk.SampleCountFlagBits.COUNT_1,
-	tiling = vk.ImageTiling.OPTIMAL,
-	usage = vk.ImageUsageFlagBits.DEPTH_STENCIL_ATTACHMENT,
-	sharingMode = vk.SharingMode.EXCLUSIVE,
-	initialLayout = vk.ImageLayout.UNDEFINED,
-})
-
-do
-	local req = device:getImageMemoryRequirements(depthImage)
+---@param w number
+---@param h number
+---@return vk.ffi.Image
+---@return vk.ffi.DeviceMemory
+---@return vk.ffi.ImageView
+local function createDepthResources(w, h)
+	local img = device:createImage({
+		imageType = vk.ImageType.TYPE_2D,
+		format = depthFormat,
+		extent = { width = w, height = h, depth = 1 },
+		mipLevels = 1,
+		arrayLayers = 1,
+		samples = vk.SampleCountFlagBits.COUNT_1,
+		tiling = vk.ImageTiling.OPTIMAL,
+		usage = vk.ImageUsageFlagBits.DEPTH_STENCIL_ATTACHMENT,
+		sharingMode = vk.SharingMode.EXCLUSIVE,
+		initialLayout = vk.ImageLayout.UNDEFINED,
+	})
+	local req = device:getImageMemoryRequirements(img)
 	local mem = device:allocateMemory({
 		allocationSize = req.size,
 		memoryTypeIndex = findMemoryType(req.memoryTypeBits, vk.MemoryPropertyFlagBits.DEVICE_LOCAL),
 	})
-	device:bindImageMemory(depthImage, mem, 0)
+	device:bindImageMemory(img, mem, 0)
+	local view = device:createImageView({
+		image = img,
+		viewType = vk.ImageViewType.TYPE_2D,
+		format = depthFormat,
+		subresourceRange = {
+			aspectMask = vk.ImageAspectFlagBits.DEPTH,
+			baseMipLevel = 0,
+			levelCount = 1,
+			baseArrayLayer = 0,
+			layerCount = 1,
+		},
+		components = {
+			r = vk.ComponentSwizzle.IDENTITY,
+			g = vk.ComponentSwizzle.IDENTITY,
+			b = vk.ComponentSwizzle.IDENTITY,
+			a = vk.ComponentSwizzle.IDENTITY,
+		},
+	})
+	return img, mem, view
 end
 
-local depthImageView = device:createImageView({
-	image = depthImage,
-	viewType = vk.ImageViewType.TYPE_2D,
-	format = depthFormat,
-	subresourceRange = {
-		aspectMask = vk.ImageAspectFlagBits.DEPTH,
-		baseMipLevel = 0,
-		levelCount = 1,
-		baseArrayLayer = 0,
-		layerCount = 1,
-	},
-	components = {
-		r = vk.ComponentSwizzle.IDENTITY,
-		g = vk.ComponentSwizzle.IDENTITY,
-		b = vk.ComponentSwizzle.IDENTITY,
-		a = vk.ComponentSwizzle.IDENTITY,
-	},
-})
+local depthImage, depthMemory, depthImageView = createDepthResources(W, H)
 
 -- ─── Render pass ─────────────────────────────────────────────────────────────
 
@@ -694,6 +700,81 @@ vertexOffsets[0] = 0
 
 local beginInfo = vk.CommandBufferBeginInfo({ flags = vk.CommandBufferUsageFlagBits.SIMULTANEOUS_USE })
 
+local function recreateSwapchain()
+	device:queueWaitIdle(queue)
+
+	W = window.width
+	H = window.height
+
+	for _, fb in ipairs(framebuffers) do device:destroyFramebuffer(fb) end
+	for _, iv in ipairs(imageViews) do device:destroyImageView(iv) end
+	device:destroyImageView(depthImageView)
+	device:destroyImage(depthImage)
+	device:freeMemory(depthMemory)
+
+	depthImage, depthMemory, depthImageView = createDepthResources(W, H)
+
+	local oldSwapchain = swapchain
+	swapchain = device:createSwapchainKHR({
+		surface = surface,
+		minImageCount = 3,
+		imageFormat = desiredFormat,
+		imageColorSpace = vk.ColorSpaceKHR.SRGB_NONLINEAR,
+		imageExtent = { width = W, height = H },
+		imageArrayLayers = 1,
+		imageUsage = vk.ImageUsageFlagBits.COLOR_ATTACHMENT,
+		imageSharingMode = vk.SharingMode.EXCLUSIVE,
+		preTransform = vk.SurfaceTransformFlagBitsKHR.IDENTITY,
+		compositeAlpha = vk.CompositeAlphaFlagBitsKHR.OPAQUE,
+		presentMode = vk.PresentModeKHR.IMMEDIATE,
+		clipped = 1,
+		oldSwapchain = oldSwapchain,
+	})
+	device:destroySwapchainKHR(oldSwapchain)
+
+	imageViews = {}
+	framebuffers = {}
+	for i, image in ipairs(device:getSwapchainImagesKHR(swapchain)) do
+		local iv = device:createImageView({
+			image = image,
+			viewType = vk.ImageViewType.TYPE_2D,
+			format = desiredFormat,
+			subresourceRange = {
+				aspectMask = vk.ImageAspectFlagBits.COLOR,
+				baseMipLevel = 0,
+				levelCount = 1,
+				baseArrayLayer = 0,
+				layerCount = 1,
+			},
+			components = {
+				r = vk.ComponentSwizzle.IDENTITY,
+				g = vk.ComponentSwizzle.IDENTITY,
+				b = vk.ComponentSwizzle.IDENTITY,
+				a = vk.ComponentSwizzle.IDENTITY,
+			},
+		})
+		imageViews[i] = iv
+		local attachments = vk.ImageViewArray(2)
+		attachments[0] = iv
+		attachments[1] = depthImageView
+		framebuffers[i] = device:createFramebuffer({
+			renderPass = renderPass,
+			width = W,
+			height = H,
+			layers = 1,
+			attachmentCount = 2,
+			pAttachments = attachments,
+		})
+	end
+
+	scissors[0].extent.width = W
+	scissors[0].extent.height = H
+	viewports[0].width = W
+	viewports[0].height = H
+	rpBeginInfo.renderArea.extent.width = W
+	rpBeginInfo.renderArea.extent.height = H
+end
+
 local currentFrame = 1
 
 local function draw()
@@ -713,15 +794,17 @@ local function draw()
 	currentFrame = currentFrame % fencesLen + 1
 
 	device:waitForFences(1, fences + frameOffset, true, math.huge)
+
+	local acquireResult, imageIndex = device:acquireNextImageKHR(swapchain, -1, imgSemaphore, nil)
+	if acquireResult == vk.Result.ERROR_OUT_OF_DATE_KHR then
+		recreateSwapchain()
+		return
+	end
+
 	device:resetFences(1, fences + frameOffset)
 	device:resetCommandBuffer(cb)
 
 	commandBuffersToSubmit[0] = cb
-
-	local acquireResult, imageIndex = device:acquireNextImageKHR(swapchain, -1, imgSemaphore, nil)
-	if acquireResult ~= vk.Result.SUCCESS then
-		return acquireResult
-	end
 	imageAcquireSemaphoreForImage[imageIndex + 1] = imgSemaphore
 
 	waitSemaphoreForSubmit[0] = imageAcquireSemaphoreForImage[imageIndex + 1]
@@ -744,7 +827,10 @@ local function draw()
 	device:endCommandBuffer(cb)
 
 	device:queueSubmit(queue, 1, queueSubmits, fence)
-	return device:queuePresentKHR(queue, swapchain, imageIndex, renderFinishedSemaphores[imageIndex + 1])
+	local presentResult = device:queuePresentKHR(queue, swapchain, imageIndex, renderFinishedSemaphores[imageIndex + 1])
+	if presentResult == vk.Result.ERROR_OUT_OF_DATE_KHR or presentResult == vk.Result.SUBOPTIMAL_KHR then
+		recreateSwapchain()
+	end
 end
 
 -- ─── Event loop ───────────────────────────────────────────────────────────────
@@ -754,6 +840,8 @@ eventLoop:run(function(event, handler)
 
 	if event.name == "redraw" then
 		draw()
+	elseif event.name == "resize" then
+		recreateSwapchain()
 	elseif event.name == "windowClose" then
 		handler:exit()
 	elseif event.name == "aboutToWait" then
