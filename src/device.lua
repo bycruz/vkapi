@@ -615,6 +615,12 @@ return function(vk)
 		self.v1_0.vkDestroyFence(self.handle, fence, allocator)
 	end
 
+	---@param semaphore vk.ffi.Semaphore
+	---@param allocator ffi.cdata*?
+	function VKDevice:destroySemaphore(semaphore, allocator)
+		self.v1_0.vkDestroySemaphore(self.handle, semaphore, allocator)
+	end
+
 	---@param memory vk.ffi.DeviceMemory
 	---@param allocator ffi.cdata*?
 	function VKDevice:freeMemory(memory, allocator)
