@@ -467,7 +467,10 @@ local function draw()
 	commandBuffersToSubmit[0] = commandBuffer
 
 	-- Acquire the next image using the current frame's semaphore
-	local imageIndex = device:acquireNextImageKHR(swapchain, -1, imgSemaphore, nil)
+	local acquireResult, imageIndex = device:acquireNextImageKHR(swapchain, -1, imgSemaphore, nil)
+	if acquireResult ~= vk.Result.SUCCESS then
+		return acquireResult
+	end
 
 	-- Track which semaphore was used for this image
 	imageAcquireSemaphoreForImage[imageIndex + 1] = imgSemaphore
@@ -497,7 +500,7 @@ local function draw()
 	device:endCommandBuffer(commandBuffer)
 
 	device:queueSubmit(queue, 1, queueSubmits, fence)
-	device:queuePresentKHR(queue, swapchain, imageIndex, renderSemaphore)
+	return device:queuePresentKHR(queue, swapchain, imageIndex, renderSemaphore)
 end
 
 eventLoop:run(function(event, handler)

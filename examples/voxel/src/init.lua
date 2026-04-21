@@ -718,7 +718,10 @@ local function draw()
 
 	commandBuffersToSubmit[0] = cb
 
-	local imageIndex = device:acquireNextImageKHR(swapchain, -1, imgSemaphore, nil)
+	local acquireResult, imageIndex = device:acquireNextImageKHR(swapchain, -1, imgSemaphore, nil)
+	if acquireResult ~= vk.Result.SUCCESS then
+		return acquireResult
+	end
 	imageAcquireSemaphoreForImage[imageIndex + 1] = imgSemaphore
 
 	waitSemaphoreForSubmit[0] = imageAcquireSemaphoreForImage[imageIndex + 1]
@@ -741,7 +744,7 @@ local function draw()
 	device:endCommandBuffer(cb)
 
 	device:queueSubmit(queue, 1, queueSubmits, fence)
-	device:queuePresentKHR(queue, swapchain, imageIndex, renderFinishedSemaphores[imageIndex + 1])
+	return device:queuePresentKHR(queue, swapchain, imageIndex, renderFinishedSemaphores[imageIndex + 1])
 end
 
 -- ─── Event loop ───────────────────────────────────────────────────────────────
