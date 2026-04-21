@@ -1044,9 +1044,6 @@ return function(vk)
 		local imageIndex = ffi.new("uint32_t[1]")
 		local result = self.v1_0.vkAcquireNextImageKHR(self.handle, swapchain, timeout, semaphore or 0, fence or 0,
 			imageIndex)
-		if result < 0 then
-			error("Failed to acquire next swapchain image, error code: " .. tostring(result))
-		end
 		return result, imageIndex[0]
 	end
 
@@ -1076,11 +1073,7 @@ return function(vk)
 				info.waitSemaphoreCount = 0
 			end
 
-			local result = self.v1_0.vkQueuePresentKHR(queue, info)
-			if result < 0 then
-				error("Failed to present queue, error code: " .. tostring(result))
-			end
-			return result
+			return self.v1_0.vkQueuePresentKHR(queue, info)
 		end
 	end
 
