@@ -998,6 +998,12 @@ return function(vk)
 		return fence[0]
 	end
 
+	---@param swapchain vk.ffi.SwapchainKHR
+	---@param allocator ffi.cdata*?
+	function VKDevice:destroySwapchainKHR(swapchain, allocator)
+		self.v1_0.vkDestroySwapchainKHR(self.handle, swapchain, allocator)
+	end
+
 	---@param info vk.ffi.SwapchainCreateInfoKHR
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.SwapchainKHR
