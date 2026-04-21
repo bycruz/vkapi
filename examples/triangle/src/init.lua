@@ -101,63 +101,90 @@ local renderPass = device:createRenderPass({
 	}
 })
 
-local swapchain = device:createSwapchainKHR({
-	surface = surface,
-	minImageCount = 3,
-	imageFormat = desiredFormat,
-	imageColorSpace = vk.ColorSpaceKHR.SRGB_NONLINEAR,
-	imageExtent = { width = window.width, height = window.height },
-	imageArrayLayers = 1,
-	imageUsage = vk.ImageUsageFlagBits.COLOR_ATTACHMENT,
-	imageSharingMode = vk.SharingMode.EXCLUSIVE,
-	preTransform = vk.SurfaceTransformFlagBitsKHR.IDENTITY,
-	compositeAlpha = vk.CompositeAlphaFlagBitsKHR.OPAQUE,
-	presentMode = vk.PresentModeKHR.IMMEDIATE,
-	clipped = 1,
-	oldSwapchain = nil
-})
+local imageViews = {} ---@type vk.ffi.ImageView[]
+local framebuffers = {} ---@type vk.ffi.Framebuffer[]
 
-local swapchainImages = device:getSwapchainImagesKHR(swapchain)
+local scissors = vk.Rect2DArray(1)
+local viewports = vk.ViewportArray(1)
 
-local imageViews = {}
-local framebuffers = {}
+local renderPassBeginInfo = vk.RenderPassBeginInfo()
+renderPassBeginInfo.renderPass = renderPass
+renderPassBeginInfo.clearValueCount = 1
+local clearValueArray = vk.ClearValueArray(1) -- pin: ensure memory isn't freed
+renderPassBeginInfo.pClearValues = clearValueArray
+renderPassBeginInfo.pClearValues[0].color.float32[0] = 0.0
+renderPassBeginInfo.pClearValues[0].color.float32[1] = 0.0
+renderPassBeginInfo.pClearValues[0].color.float32[2] = 0.0
+renderPassBeginInfo.pClearValues[0].color.float32[3] = 1.0
 
-for i, image in ipairs(swapchainImages) do
-	local imageView = device:createImageView({
-		image = image,
-		viewType = vk.ImageViewType.TYPE_2D,
-		format = desiredFormat,
-		subresourceRange = {
-			aspectMask = vk.ImageAspectFlagBits.COLOR,
-			baseMipLevel = 0,
-			levelCount = 1,
-			baseArrayLayer = 0,
-			layerCount = 1
-		},
-		components = {
-			r = vk.ComponentSwizzle.IDENTITY,
-			g = vk.ComponentSwizzle.IDENTITY,
-			b = vk.ComponentSwizzle.IDENTITY,
-			a = vk.ComponentSwizzle.IDENTITY
-		}
+---@param oldSwapchain vk.ffi.SwapchainKHR?
+---@return vk.ffi.SwapchainKHR
+local function buildSwapchain(oldSwapchain)
+	if oldSwapchain then
+		for _, fb in ipairs(framebuffers) do device:destroyFramebuffer(fb) end
+		for _, iv in ipairs(imageViews) do device:destroyImageView(iv) end
+	end
+
+	local sc = device:createSwapchainKHR({
+		surface = surface,
+		minImageCount = 3,
+		imageFormat = desiredFormat,
+		imageColorSpace = vk.ColorSpaceKHR.SRGB_NONLINEAR,
+		imageExtent = { width = window.width, height = window.height },
+		imageArrayLayers = 1,
+		imageUsage = vk.ImageUsageFlagBits.COLOR_ATTACHMENT,
+		imageSharingMode = vk.SharingMode.EXCLUSIVE,
+		preTransform = vk.SurfaceTransformFlagBitsKHR.IDENTITY,
+		compositeAlpha = vk.CompositeAlphaFlagBitsKHR.OPAQUE,
+		presentMode = vk.PresentModeKHR.IMMEDIATE,
+		clipped = 1,
+		oldSwapchain = oldSwapchain,
 	})
+	if oldSwapchain then device:destroySwapchainKHR(oldSwapchain) end
 
-	imageViews[i] = imageView
+	imageViews = {}
+	framebuffers = {}
+	for i, image in ipairs(device:getSwapchainImagesKHR(sc)) do
+		local iv = device:createImageView({
+			image = image,
+			viewType = vk.ImageViewType.TYPE_2D,
+			format = desiredFormat,
+			subresourceRange = {
+				aspectMask = vk.ImageAspectFlagBits.COLOR,
+				baseMipLevel = 0,
+				levelCount = 1,
+				baseArrayLayer = 0,
+				layerCount = 1
+			},
+			components = {
+				r = vk.ComponentSwizzle.IDENTITY,
+				g = vk.ComponentSwizzle.IDENTITY,
+				b = vk.ComponentSwizzle.IDENTITY,
+				a = vk.ComponentSwizzle.IDENTITY
+			}
+		})
+		imageViews[i] = iv
+		local attachments = vk.ImageViewArray(1)
+		attachments[0] = iv
+		framebuffers[i] = device:createFramebuffer({
+			renderPass = renderPass,
+			width = window.width,
+			height = window.height,
+			layers = 1,
+			attachmentCount = 1,
+			pAttachments = attachments
+		})
+	end
 
-	local attachments = vk.ImageViewArray(1)
-	attachments[0] = imageView
+	scissors[0] = { offset = { x = 0, y = 0 }, extent = { width = window.width, height = window.height } }
+	viewports[0] = { x = 0, y = 0, width = window.width, height = window.height, minDepth = 0.0, maxDepth = 1.0 }
+	renderPassBeginInfo.renderArea = { offset = { x = 0, y = 0 }, extent = { width = window.width, height = window.height } }
 
-	local framebuffer = device:createFramebuffer({
-		renderPass = renderPass,
-		width = window.width,
-		height = window.height,
-		layers = 1,
-		attachmentCount = 1,
-		pAttachments = attachments
-	})
-
-	framebuffers[i] = framebuffer
+	return sc
 end
+
+local swapchain = buildSwapchain(nil)
+local swapchainImages = device:getSwapchainImagesKHR(swapchain)
 
 ---@type vk.ffi.CommandPool[]
 local commandPools = {}
@@ -247,7 +274,6 @@ local indexBuffer = device:createBuffer({
 	size = 3 * ffi.sizeof("uint16_t"),
 	usage = vk.BufferUsageFlagBits.INDEX_BUFFER
 })
-
 
 do
 	local memoryRequirements = device:getBufferMemoryRequirements(indexBuffer)
@@ -359,38 +385,6 @@ local pipeline = device:createGraphicsPipelines(nil, { {
 	layout = pipelineLayout
 } })[1]
 
-local scissors = vk.Rect2DArray(1)
-scissors[0] = {
-	offset = { x = 0, y = 0 },
-	extent = { width = 800, height = 600 }
-}
-
-local viewports = vk.ViewportArray(1)
-viewports[0] = {
-	x = 0,
-	y = 0,
-	width = 800,
-	height = 600,
-	minDepth = 0.0,
-	maxDepth = 1.0
-}
-
-local renderPassBeginInfo = vk.RenderPassBeginInfo()
-renderPassBeginInfo.renderPass = renderPass
-renderPassBeginInfo.framebuffer = framebuffers[1]
-renderPassBeginInfo.renderArea = {
-	offset = { x = 0, y = 0 },
-	extent = { width = 800, height = 600 }
-}
-renderPassBeginInfo.clearValueCount = 1
-
-local clearValueArray = vk.ClearValueArray(1) -- pin: ensure memory isn't freed
-renderPassBeginInfo.pClearValues = clearValueArray
-renderPassBeginInfo.pClearValues[0].color.float32[0] = 0.0
-renderPassBeginInfo.pClearValues[0].color.float32[1] = 0.0
-renderPassBeginInfo.pClearValues[0].color.float32[2] = 0.0
-renderPassBeginInfo.pClearValues[0].color.float32[3] = 1.0
-
 local imageAvailableSemaphores = {}
 local renderFinishedSemaphores = {}
 local inFlightFences = {}
@@ -400,20 +394,10 @@ for i = 1, #swapchainImages do
 	inFlightFences[i] = device:createFence({ flags = vk.FenceCreateFlagBits.SIGNALED })
 end
 
-local swapchains = vk.SwapchainKHRArray(1)
-swapchains[0] = swapchain
-
 local imageIndices = ffi.new("uint32_t[1]")
 
-local waitSemaphoresLen = #swapchainImages
-local waitSemaphores = vk.SemaphoreArray(waitSemaphoresLen)
-for i = 1, waitSemaphoresLen do
-	waitSemaphores[i - 1] = imageAvailableSemaphores[i]
-end
-
-local signalSemaphoresLen = #swapchainImages
-local signalSemaphores = vk.SemaphoreArray(signalSemaphoresLen)
-for i = 1, signalSemaphoresLen do
+local signalSemaphores = vk.SemaphoreArray(#swapchainImages)
+for i = 1, #swapchainImages do
 	signalSemaphores[i - 1] = renderFinishedSemaphores[i]
 end
 
@@ -422,13 +406,10 @@ local waitDstStageMask = ffi.new("uint32_t[1]", vk.PipelineStageFlagBits.COLOR_A
 
 local queueSubmits = vk.SubmitInfoArray(1)
 queueSubmits[0] = vk.SubmitInfo({
-	waitSemaphoreCount = waitSemaphoresLen,
-	pWaitSemaphores = waitSemaphores,
 	pWaitDstStageMask = waitDstStageMask,
 	commandBufferCount = 1,
 	pCommandBuffers = commandBuffersToSubmit,
-	signalSemaphoreCount = signalSemaphoresLen,
-	pSignalSemaphores = signalSemaphores
+	signalSemaphoreCount = 1,
 })
 
 local vertexBuffers = vk.BufferArray(1)
@@ -443,7 +424,6 @@ for i = 1, fencesLen do
 	fences[i - 1] = inFlightFences[i]
 end
 
--- Track which semaphore was used to acquire each swapchain image
 local imageAcquireSemaphoreForImage = {}
 local waitSemaphoreForSubmit = vk.SemaphoreArray(1)
 local beginInfo = vk.CommandBufferBeginInfo({
@@ -452,85 +432,22 @@ local beginInfo = vk.CommandBufferBeginInfo({
 
 local function recreateSwapchain()
 	device:queueWaitIdle(queue)
-
-	for _, fb in ipairs(framebuffers) do device:destroyFramebuffer(fb) end
-	for _, iv in ipairs(imageViews) do device:destroyImageView(iv) end
-
-	local oldSwapchain = swapchain
-	swapchain = device:createSwapchainKHR({
-		surface = surface,
-		minImageCount = 3,
-		imageFormat = desiredFormat,
-		imageColorSpace = vk.ColorSpaceKHR.SRGB_NONLINEAR,
-		imageExtent = { width = window.width, height = window.height },
-		imageArrayLayers = 1,
-		imageUsage = vk.ImageUsageFlagBits.COLOR_ATTACHMENT,
-		imageSharingMode = vk.SharingMode.EXCLUSIVE,
-		preTransform = vk.SurfaceTransformFlagBitsKHR.IDENTITY,
-		compositeAlpha = vk.CompositeAlphaFlagBitsKHR.OPAQUE,
-		presentMode = vk.PresentModeKHR.IMMEDIATE,
-		clipped = 1,
-		oldSwapchain = oldSwapchain
-	})
-	device:destroySwapchainKHR(oldSwapchain)
-
-	imageViews = {}
-	framebuffers = {}
-	for i, image in ipairs(device:getSwapchainImagesKHR(swapchain)) do
-		local iv = device:createImageView({
-			image = image,
-			viewType = vk.ImageViewType.TYPE_2D,
-			format = desiredFormat,
-			subresourceRange = {
-				aspectMask = vk.ImageAspectFlagBits.COLOR,
-				baseMipLevel = 0,
-				levelCount = 1,
-				baseArrayLayer = 0,
-				layerCount = 1
-			},
-			components = {
-				r = vk.ComponentSwizzle.IDENTITY,
-				g = vk.ComponentSwizzle.IDENTITY,
-				b = vk.ComponentSwizzle.IDENTITY,
-				a = vk.ComponentSwizzle.IDENTITY
-			}
-		})
-		imageViews[i] = iv
-		local attachments = vk.ImageViewArray(1)
-		attachments[0] = iv
-		framebuffers[i] = device:createFramebuffer({
-			renderPass = renderPass,
-			width = window.width,
-			height = window.height,
-			layers = 1,
-			attachmentCount = 1,
-			pAttachments = attachments
-		})
-	end
-
-	scissors[0].extent.width = window.width
-	scissors[0].extent.height = window.height
-	viewports[0].width = window.width
-	viewports[0].height = window.height
-	renderPassBeginInfo.renderArea.extent.width = window.width
-	renderPassBeginInfo.renderArea.extent.height = window.height
+	swapchain = buildSwapchain(swapchain)
 end
 
 local currentFrame = 1
 local function draw()
 	local imgSemaphore = imageAvailableSemaphores[currentFrame]
 	local fence = inFlightFences[currentFrame]
-
 	local commandBuffer = commandBuffers[currentFrame]
-
 	local frameOffset = currentFrame - 1
 	currentFrame = currentFrame % fencesLen + 1
 
 	device:waitForFences(1, fences + frameOffset, true, math.huge)
 
-	-- Acquire the next image using the current frame's semaphore
 	local acquireResult, imageIndex = device:acquireNextImageKHR(swapchain, -1, imgSemaphore, nil)
 	if acquireResult == vk.Result.ERROR_OUT_OF_DATE_KHR then
+		recreateSwapchain()
 		return
 	end
 
@@ -538,18 +455,11 @@ local function draw()
 	device:resetCommandBuffer(commandBuffer)
 
 	commandBuffersToSubmit[0] = commandBuffer
-
-	-- Track which semaphore was used for this image
 	imageAcquireSemaphoreForImage[imageIndex + 1] = imgSemaphore
 
-	local renderSemaphore = renderFinishedSemaphores[imageIndex + 1]
-
-	-- Wait on the semaphore that was used to acquire this specific image
 	waitSemaphoreForSubmit[0] = imageAcquireSemaphoreForImage[imageIndex + 1]
 	queueSubmits[0].waitSemaphoreCount = 1
 	queueSubmits[0].pWaitSemaphores = waitSemaphoreForSubmit
-
-	queueSubmits[0].signalSemaphoreCount = 1
 	queueSubmits[0].pSignalSemaphores = signalSemaphores + imageIndex
 
 	renderPassBeginInfo.framebuffer = framebuffers[imageIndex + 1]
@@ -567,7 +477,10 @@ local function draw()
 	device:endCommandBuffer(commandBuffer)
 
 	device:queueSubmit(queue, 1, queueSubmits, fence)
-	device:queuePresentKHR(queue, swapchain, imageIndex, renderSemaphore)
+	local presentResult = device:queuePresentKHR(queue, swapchain, imageIndex, renderFinishedSemaphores[imageIndex + 1])
+	if presentResult == vk.Result.ERROR_OUT_OF_DATE_KHR or presentResult == vk.Result.SUBOPTIMAL_KHR then
+		recreateSwapchain()
+	end
 end
 
 eventLoop:run(function(event, handler)

@@ -154,7 +154,9 @@ local function createDepthResources(w, h)
 	return img, mem, view
 end
 
-local depthImage, depthMemory, depthImageView = createDepthResources(W, H)
+local depthImage ---@type vk.ffi.Image
+local depthMemory ---@type vk.ffi.DeviceMemory
+local depthImageView ---@type vk.ffi.ImageView
 
 -- ─── Render pass ─────────────────────────────────────────────────────────────
 
@@ -207,60 +209,99 @@ local renderPass = device:createRenderPass({
 
 -- ─── Swapchain ───────────────────────────────────────────────────────────────
 
-local swapchain = device:createSwapchainKHR({
-	surface = surface,
-	minImageCount = 3,
-	imageFormat = desiredFormat,
-	imageColorSpace = vk.ColorSpaceKHR.SRGB_NONLINEAR,
-	imageExtent = { width = W, height = H },
-	imageArrayLayers = 1,
-	imageUsage = vk.ImageUsageFlagBits.COLOR_ATTACHMENT,
-	imageSharingMode = vk.SharingMode.EXCLUSIVE,
-	preTransform = vk.SurfaceTransformFlagBitsKHR.IDENTITY,
-	compositeAlpha = vk.CompositeAlphaFlagBitsKHR.OPAQUE,
-	presentMode = vk.PresentModeKHR.IMMEDIATE,
-	clipped = 1,
-	oldSwapchain = nil,
-})
+local imageViews = {} ---@type vk.ffi.ImageView[]
+local framebuffers = {} ---@type vk.ffi.Framebuffer[]
 
-local swapchainImages = device:getSwapchainImagesKHR(swapchain)
-local imageViews = {}
-local framebuffers = {}
+local scissors = vk.Rect2DArray(1)
+local viewports = vk.ViewportArray(1)
 
-for i, image in ipairs(swapchainImages) do
-	local iv = device:createImageView({
-		image = image,
-		viewType = vk.ImageViewType.TYPE_2D,
-		format = desiredFormat,
-		subresourceRange = {
-			aspectMask = vk.ImageAspectFlagBits.COLOR,
-			baseMipLevel = 0,
-			levelCount = 1,
-			baseArrayLayer = 0,
-			layerCount = 1,
-		},
-		components = {
-			r = vk.ComponentSwizzle.IDENTITY,
-			g = vk.ComponentSwizzle.IDENTITY,
-			b = vk.ComponentSwizzle.IDENTITY,
-			a = vk.ComponentSwizzle.IDENTITY,
-		},
+local clearValues = vk.ClearValueArray(2)
+clearValues[0].color.float32[0] = 0.53
+clearValues[0].color.float32[1] = 0.81
+clearValues[0].color.float32[2] = 0.98
+clearValues[0].color.float32[3] = 1.0
+clearValues[1].depthStencil.depth = 1.0
+clearValues[1].depthStencil.stencil = 0
+
+local rpBeginInfo = vk.RenderPassBeginInfo()
+rpBeginInfo.renderPass = renderPass
+rpBeginInfo.clearValueCount = 2
+rpBeginInfo.pClearValues = clearValues
+
+---@param oldSwapchain vk.ffi.SwapchainKHR?
+---@return vk.ffi.SwapchainKHR
+local function buildSwapchain(oldSwapchain)
+	if oldSwapchain then
+		for _, fb in ipairs(framebuffers) do device:destroyFramebuffer(fb) end
+		for _, iv in ipairs(imageViews) do device:destroyImageView(iv) end
+		device:destroyImageView(depthImageView)
+		device:destroyImage(depthImage)
+		device:freeMemory(depthMemory)
+	end
+
+	depthImage, depthMemory, depthImageView = createDepthResources(W, H)
+
+	local sc = device:createSwapchainKHR({
+		surface = surface,
+		minImageCount = 3,
+		imageFormat = desiredFormat,
+		imageColorSpace = vk.ColorSpaceKHR.SRGB_NONLINEAR,
+		imageExtent = { width = W, height = H },
+		imageArrayLayers = 1,
+		imageUsage = vk.ImageUsageFlagBits.COLOR_ATTACHMENT,
+		imageSharingMode = vk.SharingMode.EXCLUSIVE,
+		preTransform = vk.SurfaceTransformFlagBitsKHR.IDENTITY,
+		compositeAlpha = vk.CompositeAlphaFlagBitsKHR.OPAQUE,
+		presentMode = vk.PresentModeKHR.IMMEDIATE,
+		clipped = 1,
+		oldSwapchain = oldSwapchain,
 	})
-	imageViews[i] = iv
+	if oldSwapchain then device:destroySwapchainKHR(oldSwapchain) end
 
-	local attachments = vk.ImageViewArray(2)
-	attachments[0] = iv
-	attachments[1] = depthImageView
+	imageViews = {}
+	framebuffers = {}
+	for i, image in ipairs(device:getSwapchainImagesKHR(sc)) do
+		local iv = device:createImageView({
+			image = image,
+			viewType = vk.ImageViewType.TYPE_2D,
+			format = desiredFormat,
+			subresourceRange = {
+				aspectMask = vk.ImageAspectFlagBits.COLOR,
+				baseMipLevel = 0,
+				levelCount = 1,
+				baseArrayLayer = 0,
+				layerCount = 1,
+			},
+			components = {
+				r = vk.ComponentSwizzle.IDENTITY,
+				g = vk.ComponentSwizzle.IDENTITY,
+				b = vk.ComponentSwizzle.IDENTITY,
+				a = vk.ComponentSwizzle.IDENTITY,
+			},
+		})
+		imageViews[i] = iv
+		local attachments = vk.ImageViewArray(2)
+		attachments[0] = iv
+		attachments[1] = depthImageView
+		framebuffers[i] = device:createFramebuffer({
+			renderPass = renderPass,
+			width = W,
+			height = H,
+			layers = 1,
+			attachmentCount = 2,
+			pAttachments = attachments,
+		})
+	end
 
-	framebuffers[i] = device:createFramebuffer({
-		renderPass = renderPass,
-		width = W,
-		height = H,
-		layers = 1,
-		attachmentCount = 2,
-		pAttachments = attachments,
-	})
+	scissors[0] = { offset = { x = 0, y = 0 }, extent = { width = W, height = H } }
+	viewports[0] = { x = 0, y = 0, width = W, height = H, minDepth = 0.0, maxDepth = 1.0 }
+	rpBeginInfo.renderArea = { offset = { x = 0, y = 0 }, extent = { width = W, height = H } }
+
+	return sc
 end
+
+local swapchain = buildSwapchain(nil)
+local swapchainImages = device:getSwapchainImagesKHR(swapchain)
 
 -- ─── Command pools & buffers ─────────────────────────────────────────────────
 
@@ -647,26 +688,6 @@ end
 
 -- ─── Draw state ───────────────────────────────────────────────────────────────
 
-local scissors = vk.Rect2DArray(1)
-scissors[0] = { offset = { x = 0, y = 0 }, extent = { width = W, height = H } }
-
-local viewports = vk.ViewportArray(1)
-viewports[0] = { x = 0, y = 0, width = W, height = H, minDepth = 0.0, maxDepth = 1.0 }
-
-local clearValues = vk.ClearValueArray(2)
-clearValues[0].color.float32[0] = 0.53
-clearValues[0].color.float32[1] = 0.81
-clearValues[0].color.float32[2] = 0.98
-clearValues[0].color.float32[3] = 1.0
-clearValues[1].depthStencil.depth = 1.0
-clearValues[1].depthStencil.stencil = 0
-
-local rpBeginInfo = vk.RenderPassBeginInfo()
-rpBeginInfo.renderPass = renderPass
-rpBeginInfo.renderArea = { offset = { x = 0, y = 0 }, extent = { width = W, height = H } }
-rpBeginInfo.clearValueCount = 2
-rpBeginInfo.pClearValues = clearValues
-
 local mvpData = ffi.new("float[16]")
 
 local fencesLen = #swapchainImages
@@ -702,77 +723,9 @@ local beginInfo = vk.CommandBufferBeginInfo({ flags = vk.CommandBufferUsageFlagB
 
 local function recreateSwapchain()
 	device:queueWaitIdle(queue)
-
 	W = window.width
 	H = window.height
-
-	for _, fb in ipairs(framebuffers) do device:destroyFramebuffer(fb) end
-	for _, iv in ipairs(imageViews) do device:destroyImageView(iv) end
-	device:destroyImageView(depthImageView)
-	device:destroyImage(depthImage)
-	device:freeMemory(depthMemory)
-
-	depthImage, depthMemory, depthImageView = createDepthResources(W, H)
-
-	local oldSwapchain = swapchain
-	swapchain = device:createSwapchainKHR({
-		surface = surface,
-		minImageCount = 3,
-		imageFormat = desiredFormat,
-		imageColorSpace = vk.ColorSpaceKHR.SRGB_NONLINEAR,
-		imageExtent = { width = W, height = H },
-		imageArrayLayers = 1,
-		imageUsage = vk.ImageUsageFlagBits.COLOR_ATTACHMENT,
-		imageSharingMode = vk.SharingMode.EXCLUSIVE,
-		preTransform = vk.SurfaceTransformFlagBitsKHR.IDENTITY,
-		compositeAlpha = vk.CompositeAlphaFlagBitsKHR.OPAQUE,
-		presentMode = vk.PresentModeKHR.IMMEDIATE,
-		clipped = 1,
-		oldSwapchain = oldSwapchain,
-	})
-	device:destroySwapchainKHR(oldSwapchain)
-
-	imageViews = {}
-	framebuffers = {}
-	for i, image in ipairs(device:getSwapchainImagesKHR(swapchain)) do
-		local iv = device:createImageView({
-			image = image,
-			viewType = vk.ImageViewType.TYPE_2D,
-			format = desiredFormat,
-			subresourceRange = {
-				aspectMask = vk.ImageAspectFlagBits.COLOR,
-				baseMipLevel = 0,
-				levelCount = 1,
-				baseArrayLayer = 0,
-				layerCount = 1,
-			},
-			components = {
-				r = vk.ComponentSwizzle.IDENTITY,
-				g = vk.ComponentSwizzle.IDENTITY,
-				b = vk.ComponentSwizzle.IDENTITY,
-				a = vk.ComponentSwizzle.IDENTITY,
-			},
-		})
-		imageViews[i] = iv
-		local attachments = vk.ImageViewArray(2)
-		attachments[0] = iv
-		attachments[1] = depthImageView
-		framebuffers[i] = device:createFramebuffer({
-			renderPass = renderPass,
-			width = W,
-			height = H,
-			layers = 1,
-			attachmentCount = 2,
-			pAttachments = attachments,
-		})
-	end
-
-	scissors[0].extent.width = W
-	scissors[0].extent.height = H
-	viewports[0].width = W
-	viewports[0].height = H
-	rpBeginInfo.renderArea.extent.width = W
-	rpBeginInfo.renderArea.extent.height = H
+	swapchain = buildSwapchain(swapchain)
 end
 
 local currentFrame = 1
