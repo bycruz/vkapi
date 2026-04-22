@@ -713,6 +713,12 @@ return function(vk)
 		return pool[0]
 	end
 
+	---@param layout vk.ffi.DescriptorSetLayout
+	---@param allocator ffi.cdata*?
+	function VKDevice:destroyDescriptorSetLayout(layout, allocator)
+		self.v1_0.vkDestroyDescriptorSetLayout(self.handle, layout, allocator)
+	end
+
 	---@param pool vk.ffi.DescriptorPool
 	---@param allocator ffi.cdata*?
 	function VKDevice:destroyDescriptorPool(pool, allocator)
