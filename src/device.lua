@@ -335,6 +335,18 @@ return function(vk)
 		return pipeline[0]
 	end
 
+	---@param pipeline vk.ffi.Pipeline
+	---@param allocator ffi.cdata*?
+	function VKDevice:destroyPipeline(pipeline, allocator)
+		self.v1_0.vkDestroyPipeline(self.handle, pipeline, allocator)
+	end
+
+	---@param pipelineLayout vk.ffi.PipelineLayout
+	---@param allocator ffi.cdata*?
+	function VKDevice:destroyPipelineLayout(pipelineLayout, allocator)
+		self.v1_0.vkDestroyPipelineLayout(self.handle, pipelineLayout, allocator)
+	end
+
 	---@class vk.AttachmentDescription
 	---@field format vk.Format
 	---@field samples vk.SampleCountFlagBits?
