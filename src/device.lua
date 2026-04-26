@@ -1186,7 +1186,6 @@ return function(vk)
 		---@format disable-next
 		local v1_0Types = {
 			vkCreateBuffer = "VkResult(*)(VkDevice, const VkBufferCreateInfo*, const VkAllocationCallbacks*, VkBuffer*)",
-			vkDestroyBuffer = "void(*)(VkDevice, VkBuffer, const VkAllocationCallbacks*)",
 			vkCreateShaderModule = "VkResult(*)(VkDevice, const VkShaderModuleCreateInfo*, const VkAllocationCallbacks*, VkShaderModule*)",
 			vkCreatePipelineLayout = "VkResult(*)(VkDevice, const VkPipelineLayoutCreateInfo*, const VkAllocationCallbacks*, VkPipelineLayout*)",
 			vkCreateGraphicsPipelines = "VkResult(*)(VkDevice, uint64_t, uint32_t, const VkGraphicsPipelineCreateInfo*, const VkAllocationCallbacks*, VkPipeline*)",
@@ -1237,6 +1236,7 @@ return function(vk)
 			vkCreateSampler = "VkResult(*)(VkDevice, const VkSamplerCreateInfo*, const VkAllocationCallbacks*, VkSampler*)",
 			vkDestroySampler = "void(*)(VkDevice, VkSampler, const VkAllocationCallbacks*)",
 			vkDestroyDescriptorPool = "void(*)(VkDevice, VkDescriptorPool, const VkAllocationCallbacks*)",
+			vkDestroyDescriptorSetLayout = "void(*)(VkDevice, VkDescriptorSetLayout, const VkAllocationCallbacks*)",
 			vkDestroyImageView = "void(*)(VkDevice, VkImageView, const VkAllocationCallbacks*)",
 			vkDestroyFramebuffer = "void(*)(VkDevice, VkFramebuffer, const VkAllocationCallbacks*)",
 			vkDestroyCommandPool = "void(*)(VkDevice, VkCommandPool, const VkAllocationCallbacks*)",
