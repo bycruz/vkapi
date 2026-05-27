@@ -138,7 +138,7 @@ local function buildSwapchain(oldSwapchain)
 		compositeAlpha = vk.CompositeAlphaFlagBitsKHR.OPAQUE,
 		presentMode = vk.PresentModeKHR.IMMEDIATE,
 		clipped = 1,
-		oldSwapchain = oldSwapchain,
+		oldSwapchain = oldSwapchain
 	})
 	if oldSwapchain then device:destroySwapchainKHR(oldSwapchain) end
 
@@ -409,7 +409,7 @@ queueSubmits[0] = vk.SubmitInfo({
 	pWaitDstStageMask = waitDstStageMask,
 	commandBufferCount = 1,
 	pCommandBuffers = commandBuffersToSubmit,
-	signalSemaphoreCount = 1,
+	signalSemaphoreCount = 1
 })
 
 local vertexBuffers = vk.BufferArray(1)
@@ -486,8 +486,6 @@ end
 eventLoop:run(function(event, handler)
 	if event.name == "redraw" then
 		draw()
-	elseif event.name == "resize" then
-		recreateSwapchain()
 	elseif event.name == "windowClose" then
 		handler:exit()
 	elseif event.name == "aboutToWait" then
