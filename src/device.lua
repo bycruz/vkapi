@@ -1064,6 +1064,8 @@ return function(vk)
 		return imageTable
 	end
 
+	local imageIndex = ffi.new("uint32_t[1]")
+
 	---@param swapchain vk.ffi.SwapchainKHR
 	---@param timeout number
 	---@param semaphore vk.ffi.Semaphore?
@@ -1071,10 +1073,8 @@ return function(vk)
 	---@return vk.Result result
 	---@return number imageIndex
 	function VKDevice:acquireNextImageKHR(swapchain, timeout, semaphore, fence)
-		local imageIndex = ffi.new("uint32_t[1]")
-		local result = self.v1_0.vkAcquireNextImageKHR(self.handle, swapchain, timeout, semaphore or 0, fence or 0,
-			imageIndex)
-		return result, imageIndex[0]
+		return self.v1_0.vkAcquireNextImageKHR(self.handle, swapchain, timeout, semaphore or 0, fence or 0, imageIndex),
+			imageIndex[0]
 	end
 
 	do
