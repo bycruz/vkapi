@@ -125,21 +125,23 @@ local function buildSwapchain(oldSwapchain)
 		for _, iv in ipairs(imageViews) do device:destroyImageView(iv) end
 	end
 
-	local sc = device:createSwapchainKHR({
-		surface = surface,
-		minImageCount = 3,
-		imageFormat = desiredFormat,
-		imageColorSpace = vk.ColorSpaceKHR.SRGB_NONLINEAR,
-		imageExtent = { width = window.width, height = window.height },
-		imageArrayLayers = 1,
-		imageUsage = vk.ImageUsageFlagBits.COLOR_ATTACHMENT,
-		imageSharingMode = vk.SharingMode.EXCLUSIVE,
-		preTransform = vk.SurfaceTransformFlagBitsKHR.IDENTITY,
-		compositeAlpha = vk.CompositeAlphaFlagBitsKHR.OPAQUE,
-		presentMode = vk.PresentModeKHR.IMMEDIATE,
-		clipped = 1,
-		oldSwapchain = oldSwapchain
-	})
+	local scInfo = vk.SwapchainCreateInfoKHR()
+	scInfo.surface = surface
+	scInfo.minImageCount = 3
+	scInfo.imageFormat = desiredFormat
+	scInfo.imageColorSpace = vk.ColorSpaceKHR.SRGB_NONLINEAR
+	scInfo.imageExtent.width = window.width
+	scInfo.imageExtent.height = window.height
+	scInfo.imageArrayLayers = 1
+	scInfo.imageUsage = vk.ImageUsageFlagBits.COLOR_ATTACHMENT
+	scInfo.imageSharingMode = vk.SharingMode.EXCLUSIVE
+	scInfo.preTransform = vk.SurfaceTransformFlagBitsKHR.IDENTITY
+	scInfo.compositeAlpha = vk.CompositeAlphaFlagBitsKHR.OPAQUE
+	scInfo.presentMode = vk.PresentModeKHR.IMMEDIATE
+	scInfo.clipped = 1
+
+	if oldSwapchain then scInfo.oldSwapchain = oldSwapchain end
+	local sc = device:createSwapchainKHR(scInfo)
 	if oldSwapchain then device:destroySwapchainKHR(oldSwapchain) end
 
 	imageViews = {}

@@ -1028,16 +1028,17 @@ return function(vk)
 		self.v1_0.vkDestroySwapchainKHR(self.handle, swapchain, allocator)
 	end
 
+	local swapchain = ffi.new("VkSwapchainKHR[1]")
+
 	---@param info vk.ffi.SwapchainCreateInfoKHR
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.SwapchainKHR
 	function VKDevice:createSwapchainKHR(info, allocator)
-		local createInfo = vk.SwapchainCreateInfoKHR(info)
-		local swapchain = ffi.new("VkSwapchainKHR[1]")
-		local result = self.v1_0.vkCreateSwapchainKHR(self.handle, createInfo, allocator, swapchain)
+		local result = self.v1_0.vkCreateSwapchainKHR(self.handle, info, allocator, swapchain)
 		if result ~= 0 then
 			error("Failed to create Vulkan swapchain, error code: " .. tostring(result))
 		end
+
 		return swapchain[0]
 	end
 
