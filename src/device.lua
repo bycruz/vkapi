@@ -8,13 +8,13 @@ return function(vk)
 	local VKDevice = {}
 	VKDevice.__index = VKDevice
 
+	local buffer = vk.BufferArray(1)
+
 	---@param info vk.ffi.BufferCreateInfo
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.Buffer
 	function VKDevice:createBuffer(info, allocator)
-		local createInfo = vk.BufferCreateInfo(info)
-		local buffer = vk.BufferArray(1)
-		local result = self.v1_0.vkCreateBuffer(self.handle, createInfo, allocator, buffer)
+		local result = self.v1_0.vkCreateBuffer(self.handle, vk.BufferCreateInfo(info), allocator, buffer)
 		if result ~= 0 then
 			error("Failed to create Vulkan buffer, error code: " .. tostring(result))
 		end
@@ -27,26 +27,27 @@ return function(vk)
 		self.v1_0.vkDestroyBuffer(self.handle, buffer, allocator)
 	end
 
+	local shaderModule = vk.ShaderModuleArray(1)
+
 	---@param info vk.ffi.ShaderModuleCreateInfo
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.ShaderModule
 	function VKDevice:createShaderModule(info, allocator)
-		local createInfo = vk.ShaderModuleCreateInfo(info)
-		local shaderModule = vk.ShaderModuleArray(1)
-		local result = self.v1_0.vkCreateShaderModule(self.handle, createInfo, allocator, shaderModule)
+		local result = self.v1_0.vkCreateShaderModule(self.handle, vk.ShaderModuleCreateInfo(info), allocator,
+			shaderModule)
 		if result ~= 0 then
 			error("Failed to create Vulkan shader module, error code: " .. tostring(result))
 		end
 		return shaderModule[0]
 	end
 
+	local pipelineLayout = vk.PipelineLayoutArray(1)
+
 	---@param info vk.ffi.PipelineLayoutCreateInfo
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.PipelineLayout
 	function VKDevice:createPipelineLayout(info, allocator)
 		local createInfo = vk.PipelineLayoutCreateInfo(info)
-
-		local pipelineLayout = vk.PipelineLayoutArray(1)
 		local result = self.v1_0.vkCreatePipelineLayout(self.handle, createInfo, allocator, pipelineLayout)
 		if result ~= 0 then
 			error("Failed to create Vulkan pipeline layout, error code: " .. tostring(result))
@@ -313,6 +314,8 @@ return function(vk)
 		return pipelineList
 	end
 
+	local pipeline = vk.PipelineArray(1)
+
 	---@param pipelineCache vk.ffi.PipelineCache?
 	---@param info vk.ComputePipelineCreateInfo
 	---@param allocator ffi.cdata*?
@@ -325,8 +328,6 @@ return function(vk)
 		stage.pName = info.stage.name or "main"
 		ffi.copy(createInfo.stage, stage, ffi.sizeof(stage))
 		createInfo.layout = info.layout
-
-		local pipeline = vk.PipelineArray(1)
 		local result = self.v1_0.vkCreateComputePipelines(self.handle, pipelineCache or vk.NULL, 1, createInfo, allocator,
 			pipeline)
 		if result ~= 0 then
@@ -382,6 +383,8 @@ return function(vk)
 	---@field attachments vk.AttachmentDescription[]?
 	---@field subpasses vk.SubpassDescription[]
 	---@field dependencies vk.SubpassDependency[]?
+
+	local renderPass = vk.RenderPassArray(1)
 
 	---@param info vk.RenderPassCreateInfo
 	---@param allocator ffi.cdata*?
@@ -480,7 +483,6 @@ return function(vk)
 			pDependencies = dependencyArray
 		})
 
-		local renderPass = vk.RenderPassArray(1)
 		local result = self.v1_0.vkCreateRenderPass(self.handle, createInfo, allocator, renderPass)
 		if result ~= 0 then
 			error("Failed to create Vulkan render pass, error code: " .. tostring(result))
@@ -488,39 +490,39 @@ return function(vk)
 		return renderPass[0]
 	end
 
+	local imageView = vk.ImageViewArray(1)
+
 	---@param info vk.ffi.ImageViewCreateInfo
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.ImageView
 	function VKDevice:createImageView(info, allocator)
-		local createInfo = vk.ImageViewCreateInfo(info)
-		local imageView = vk.ImageViewArray(1)
-		local result = self.v1_0.vkCreateImageView(self.handle, createInfo, allocator, imageView)
+		local result = self.v1_0.vkCreateImageView(self.handle, vk.ImageViewCreateInfo(info), allocator, imageView)
 		if result ~= 0 then
 			error("Failed to create Vulkan image view, error code: " .. tostring(result))
 		end
 		return imageView[0]
 	end
 
+	local framebuffer = vk.FramebufferArray(1)
+
 	---@param info vk.ffi.FramebufferCreateInfo
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.Framebuffer
 	function VKDevice:createFramebuffer(info, allocator)
-		local createInfo = vk.FramebufferCreateInfo(info)
-		local framebuffer = vk.FramebufferArray(1)
-		local result = self.v1_0.vkCreateFramebuffer(self.handle, createInfo, allocator, framebuffer)
+		local result = self.v1_0.vkCreateFramebuffer(self.handle, vk.FramebufferCreateInfo(info), allocator, framebuffer)
 		if result ~= 0 then
 			error("Failed to create Vulkan framebuffer, error code: " .. tostring(result))
 		end
 		return framebuffer[0]
 	end
 
+	local commandPool = vk.CommandPoolArray(1)
+
 	---@param info vk.ffi.CommandPoolCreateInfo
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.CommandPool
 	function VKDevice:createCommandPool(info, allocator)
-		local createInfo = vk.CommandPoolCreateInfo(info)
-		local commandPool = vk.CommandPoolArray(1)
-		local result = self.v1_0.vkCreateCommandPool(self.handle, createInfo, allocator, commandPool)
+		local result = self.v1_0.vkCreateCommandPool(self.handle, vk.CommandPoolCreateInfo(info), allocator, commandPool)
 		if result ~= 0 then
 			error("Failed to create Vulkan command pool, error code: " .. tostring(result))
 		end
@@ -543,13 +545,13 @@ return function(vk)
 		return memRequirements
 	end
 
-	---@param createInfo vk.ffi.CreateImageInfo
+	local image = vk.ImageArray(1)
+
+	---@param info vk.ffi.CreateImageInfo
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.Image
-	function VKDevice:createImage(createInfo, allocator)
-		local info = vk.ImageCreateInfo(createInfo)
-		local image = vk.ImageArray(1)
-		local result = self.v1_0.vkCreateImage(self.handle, info, allocator, image)
+	function VKDevice:createImage(info, allocator)
+		local result = self.v1_0.vkCreateImage(self.handle, vk.ImageCreateInfo(info), allocator, image)
 		if result ~= 0 then
 			error("Failed to create Vulkan image, error code: " .. tostring(result))
 		end
@@ -566,12 +568,13 @@ return function(vk)
 		end
 	end
 
+	local sampler = vk.SamplerArray(1)
+
 	---@param createInfo vk.ffi.SamplerCreateInfo
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.Sampler
 	function VKDevice:createSampler(createInfo, allocator)
 		local info = vk.SamplerCreateInfo(createInfo)
-		local sampler = vk.SamplerArray(1)
 		local result = self.v1_0.vkCreateSampler(self.handle, info, allocator, sampler)
 		if result ~= 0 then
 			error("Failed to create Vulkan sampler, error code: " .. tostring(result))
@@ -657,12 +660,13 @@ return function(vk)
 		end
 	end
 
+	local memory = vk.DeviceMemoryArray(1)
+
 	---@param info vk.ffi.MemoryAllocateInfo
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.DeviceMemory
 	function VKDevice:allocateMemory(info, allocator)
 		local allocInfo = vk.MemoryAllocateInfo(info)
-		local memory = vk.DeviceMemoryArray(1)
 		local result = self.v1_0.vkAllocateMemory(self.handle, allocInfo, allocator, memory)
 		if result ~= 0 then
 			error("Failed to allocate Vulkan memory, error code: " .. tostring(result))
@@ -699,12 +703,13 @@ return function(vk)
 		self.v1_0.vkUnmapMemory(self.handle, memory)
 	end
 
+	local layout = vk.DescriptorSetLayoutArray(1)
+
 	---@param info vk.ffi.DescriptorSetLayoutCreateInfo
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.DescriptorSetLayout
 	function VKDevice:createDescriptorSetLayout(info, allocator)
 		local createInfo = vk.DescriptorSetLayoutCreateInfo(info)
-		local layout = vk.DescriptorSetLayoutArray(1)
 		local result = self.v1_0.vkCreateDescriptorSetLayout(self.handle, createInfo, allocator, layout)
 		if result ~= 0 then
 			error("Failed to create Vulkan descriptor set layout, error code: " .. tostring(result))
@@ -712,12 +717,13 @@ return function(vk)
 		return layout[0]
 	end
 
+	local pool = vk.DescriptorPoolArray(1)
+
 	---@param info vk.ffi.DescriptorPoolCreateInfo
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.DescriptorPool
 	function VKDevice:createDescriptorPool(info, allocator)
 		local createInfo = vk.DescriptorPoolCreateInfo(info)
-		local pool = vk.DescriptorPoolArray(1)
 		local result = self.v1_0.vkCreateDescriptorPool(self.handle, createInfo, allocator, pool)
 		if result ~= 0 then
 			error("Failed to create Vulkan descriptor pool, error code: " .. tostring(result))
@@ -987,21 +993,23 @@ return function(vk)
 		end
 	end
 
+	local queue = vk.QueueArray(1)
+
 	---@param queueFamilyIndex number
 	---@param queueIndex number
 	---@return vk.ffi.Queue
 	function VKDevice:getDeviceQueue(queueFamilyIndex, queueIndex)
-		local queue = vk.QueueArray(1)
 		self.v1_0.vkGetDeviceQueue(self.handle, queueFamilyIndex, queueIndex, queue)
 		return queue[0]
 	end
+
+	local semaphore = vk.SemaphoreArray(1)
 
 	---@param info vk.ffi.SemaphoreCreateInfo
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.Semaphore
 	function VKDevice:createSemaphore(info, allocator)
 		local createInfo = vk.SemaphoreCreateInfo(info)
-		local semaphore = vk.SemaphoreArray(1)
 		local result = self.v1_0.vkCreateSemaphore(self.handle, createInfo, allocator, semaphore)
 		if result ~= 0 then
 			error("Failed to create Vulkan semaphore, error code: " .. tostring(result))
@@ -1009,12 +1017,13 @@ return function(vk)
 		return semaphore[0]
 	end
 
+	local fence = vk.FenceArray(1)
+
 	---@param info vk.ffi.FenceCreateInfo
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.Fence
 	function VKDevice:createFence(info, allocator)
 		local createInfo = vk.FenceCreateInfo(info)
-		local fence = vk.FenceArray(1)
 		local result = self.v1_0.vkCreateFence(self.handle, createInfo, allocator, fence)
 		if result ~= 0 then
 			error("Failed to create Vulkan fence, error code: " .. tostring(result))

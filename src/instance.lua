@@ -20,12 +20,13 @@ return function(vk)
 	---@field enabledExtensionNames vk.DeviceExtensionName[]
 	---@field enabledFeatures vk.ffi.PhysicalDeviceFeatures?
 
+	local device = vk.DeviceArray(1)
+
 	---@param physicalDevice vk.ffi.PhysicalDevice
 	---@param info vk.DeviceCreateInfo?
 	---@param allocator ffi.cdata*?
 	---@return vk.Device
 	function VKInstance:createDevice(physicalDevice, info, allocator)
-		local device = vk.DeviceArray(1)
 		info = info or {}
 
 		-- Convert queue create infos
@@ -95,12 +96,12 @@ return function(vk)
 		return deviceList
 	end
 
+	local surface = vk.SurfaceKHRArray(1)
+
 	---@param createInfo vk.ffi.XlibSurfaceCreateInfoKHR
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.SurfaceKHR
 	function VKInstance:createXlibSurfaceKHR(createInfo, allocator)
-		local surface = vk.SurfaceKHRArray(1)
-
 		local createInfo = vk.XlibSurfaceCreateInfoKHR(createInfo)
 
 		local result = self.v1_0.vkCreateXlibSurfaceKHR(self.handle, createInfo, allocator, surface)
@@ -115,8 +116,6 @@ return function(vk)
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.SurfaceKHR
 	function VKInstance:createWin32SurfaceKHR(createInfo, allocator)
-		local surface = vk.SurfaceKHRArray(1)
-
 		-- Need to cast these to void* as they'll probably be passed as just lua numbers
 		local info = vk.Win32SurfaceCreateInfoKHR()
 		info.hwnd = ffi.cast("void*", createInfo.hwnd)
