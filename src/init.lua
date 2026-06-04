@@ -96,6 +96,20 @@ local vkEnums = require("vkapi.ffi.enums")
 ---@field DescriptorPoolSizeArray fun(count: number): vk.ffi.DescriptorPoolSize[]
 ---@field DescriptorBufferInfoArray fun(count: number): vk.ffi.DescriptorBufferInfo[]
 ---@field DescriptorImageInfoArray fun(count: number): vk.ffi.DescriptorImageInfo[]
+---@field ShaderModuleArray fun(count: number): vk.ffi.ShaderModule[]
+---@field PipelineLayoutArray fun(count: number): vk.ffi.PipelineLayout[]
+---@field PipelineArray fun(count: number): vk.ffi.Pipeline[]
+---@field RenderPassArray fun(count: number): vk.ffi.RenderPass[]
+---@field FramebufferArray fun(count: number): vk.ffi.Framebuffer[]
+---@field CommandPoolArray fun(count: number): vk.ffi.CommandPool[]
+---@field ImageArray fun(count: number): vk.ffi.Image[]
+---@field SamplerArray fun(count: number): vk.ffi.Sampler[]
+---@field DeviceMemoryArray fun(count: number): vk.ffi.DeviceMemory[]
+---@field DescriptorPoolArray fun(count: number): vk.ffi.DescriptorPool[]
+---@field QueueArray fun(count: number): vk.ffi.Queue[]
+---@field DeviceArray fun(count: number): vk.ffi.Device[]
+---@field PhysicalDeviceArray fun(count: number): vk.ffi.PhysicalDevice[]
+---@field SurfaceKHRArray fun(count: number): vk.ffi.SurfaceKHR[]
 local vk = {}
 for k, v in pairs(vkEnums) do
 	vk[k] = v
@@ -217,6 +231,20 @@ do
 	defType("DescriptorPoolSize")
 	defType("DescriptorBufferInfo")
 	defType("DescriptorImageInfo")
+	defType("ShaderModule")
+	defType("PipelineLayout")
+	defType("Pipeline")
+	defType("RenderPass")
+	defType("Framebuffer")
+	defType("CommandPool")
+	defType("Image")
+	defType("Sampler")
+	defType("DeviceMemory")
+	defType("DescriptorPool")
+	defType("Queue")
+	defType("Device")
+	defType("PhysicalDevice")
+	defType("SurfaceKHR")
 end
 
 -- Constants

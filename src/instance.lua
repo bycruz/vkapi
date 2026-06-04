@@ -25,7 +25,7 @@ return function(vk)
 	---@param allocator ffi.cdata*?
 	---@return vk.Device
 	function VKInstance:createDevice(physicalDevice, info, allocator)
-		local device = ffi.new("VkDevice[1]")
+		local device = vk.DeviceArray(1)
 		info = info or {}
 
 		-- Convert queue create infos
@@ -62,7 +62,7 @@ return function(vk)
 			pQueueCreateInfos = queueCreateInfos,
 			enabledExtensionCount = extensionCount,
 			ppEnabledExtensionNames = extensionNames,
-			pEnabledFeatures = enabledFeatures,
+			pEnabledFeatures = enabledFeatures
 		})
 
 		local result = self.v1_0.vkCreateDevice(physicalDevice, deviceCreateInfo, allocator, device)
@@ -81,7 +81,7 @@ return function(vk)
 			error("Failed to enumerate physical devices, error code: " .. tostring(result))
 		end
 
-		local devices = ffi.new("VkPhysicalDevice[?]", deviceCount[0])
+		local devices = vk.PhysicalDeviceArray(deviceCount[0])
 		result = self.v1_0.vkEnumeratePhysicalDevices(self.handle, deviceCount, devices)
 		if result ~= 0 then
 			error("Failed to enumerate physical devices, error code: " .. tostring(result))
@@ -99,7 +99,7 @@ return function(vk)
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.SurfaceKHR
 	function VKInstance:createXlibSurfaceKHR(createInfo, allocator)
-		local surface = ffi.new("VkSurfaceKHR[1]")
+		local surface = vk.SurfaceKHRArray(1)
 
 		local createInfo = vk.XlibSurfaceCreateInfoKHR(createInfo)
 
@@ -115,7 +115,7 @@ return function(vk)
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.SurfaceKHR
 	function VKInstance:createWin32SurfaceKHR(createInfo, allocator)
-		local surface = ffi.new("VkSurfaceKHR[1]")
+		local surface = vk.SurfaceKHRArray(1)
 
 		-- Need to cast these to void* as they'll probably be passed as just lua numbers
 		local info = vk.Win32SurfaceCreateInfoKHR()
@@ -138,13 +138,12 @@ return function(vk)
 
 	---@param handle vk.ffi.Instance
 	function VKInstance.new(handle)
+		---@format disable-next
 		local v1_0Types = {
 			vkCreateDevice = "VkResult(*)(VkPhysicalDevice, const VkDeviceCreateInfo*, const void*, VkDevice*)",
 			vkEnumeratePhysicalDevices = "VkResult(*)(VkInstance, uint32_t*, VkPhysicalDevice*)",
-			vkCreateXlibSurfaceKHR =
-			"VkResult(*)(VkInstance, const VkXlibSurfaceCreateInfoKHR*, const VkAllocationCallbacks*, VkSurfaceKHR*)",
-			vkCreateWin32SurfaceKHR =
-			"VkResult(*)(VkInstance, const VkWin32SurfaceCreateInfoKHR*, const VkAllocationCallbacks*, VkSurfaceKHR*)",
+			vkCreateXlibSurfaceKHR = "VkResult(*)(VkInstance, const VkXlibSurfaceCreateInfoKHR*, const VkAllocationCallbacks*, VkSurfaceKHR*)",
+			vkCreateWin32SurfaceKHR = "VkResult(*)(VkInstance, const VkWin32SurfaceCreateInfoKHR*, const VkAllocationCallbacks*, VkSurfaceKHR*)"
 		}
 
 		---@type vk.Instance.Fns
@@ -155,7 +154,7 @@ return function(vk)
 
 		return setmetatable({
 			handle = handle,
-			v1_0 = v1_0,
+			v1_0 = v1_0
 		}, VKInstance)
 	end
 
