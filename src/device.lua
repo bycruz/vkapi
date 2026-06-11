@@ -33,8 +33,7 @@ return function(vk)
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.ShaderModule
 	function VKDevice:createShaderModule(info, allocator)
-		local result = self.v1_0.vkCreateShaderModule(self.handle, vk.ShaderModuleCreateInfo(info), allocator,
-			shaderModule)
+		local result = self.v1_0.vkCreateShaderModule(self.handle, vk.ShaderModuleCreateInfo(info), allocator, shaderModule)
 		if result ~= 0 then
 			error("Failed to create Vulkan shader module, error code: " .. tostring(result))
 		end
@@ -47,8 +46,7 @@ return function(vk)
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.PipelineLayout
 	function VKDevice:createPipelineLayout(info, allocator)
-		local createInfo = vk.PipelineLayoutCreateInfo(info)
-		local result = self.v1_0.vkCreatePipelineLayout(self.handle, createInfo, allocator, pipelineLayout)
+		local result = self.v1_0.vkCreatePipelineLayout(self.handle, vk.PipelineLayoutCreateInfo(info), allocator, pipelineLayout)
 		if result ~= 0 then
 			error("Failed to create Vulkan pipeline layout, error code: " .. tostring(result))
 		end
@@ -709,8 +707,7 @@ return function(vk)
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.DescriptorSetLayout
 	function VKDevice:createDescriptorSetLayout(info, allocator)
-		local createInfo = vk.DescriptorSetLayoutCreateInfo(info)
-		local result = self.v1_0.vkCreateDescriptorSetLayout(self.handle, createInfo, allocator, layout)
+		local result = self.v1_0.vkCreateDescriptorSetLayout(self.handle, vk.DescriptorSetLayoutCreateInfo(info), allocator, layout)
 		if result ~= 0 then
 			error("Failed to create Vulkan descriptor set layout, error code: " .. tostring(result))
 		end
@@ -723,8 +720,7 @@ return function(vk)
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.DescriptorPool
 	function VKDevice:createDescriptorPool(info, allocator)
-		local createInfo = vk.DescriptorPoolCreateInfo(info)
-		local result = self.v1_0.vkCreateDescriptorPool(self.handle, createInfo, allocator, pool)
+		local result = self.v1_0.vkCreateDescriptorPool(self.handle, vk.DescriptorPoolCreateInfo(info), allocator, pool)
 		if result ~= 0 then
 			error("Failed to create Vulkan descriptor pool, error code: " .. tostring(result))
 		end
@@ -748,10 +744,12 @@ return function(vk)
 	function VKDevice:allocateDescriptorSets(info)
 		local allocInfo = vk.DescriptorSetAllocateInfo(info)
 		local descriptorSets = vk.DescriptorSetArray(allocInfo.descriptorSetCount)
+
 		local result = self.v1_0.vkAllocateDescriptorSets(self.handle, allocInfo, descriptorSets)
 		if result ~= 0 then
 			error("Failed to allocate Vulkan descriptor sets, error code: " .. tostring(result))
 		end
+
 		local sets = {}
 		for i = 0, allocInfo.descriptorSetCount - 1 do
 			sets[i + 1] = descriptorSets[i]
@@ -770,10 +768,12 @@ return function(vk)
 	function VKDevice:allocateCommandBuffers(info)
 		local allocInfo = vk.CommandBufferAllocateInfo(info)
 		local commandBuffers = vk.CommandBufferArray(allocInfo.commandBufferCount)
+
 		local result = self.v1_0.vkAllocateCommandBuffers(self.handle, allocInfo, commandBuffers)
 		if result ~= 0 then
 			error("Failed to allocate Vulkan command buffers, error code: " .. tostring(result))
 		end
+
 		local commandBufferList = {}
 		for i = 0, allocInfo.commandBufferCount - 1 do
 			commandBufferList[i + 1] = commandBuffers[i]
@@ -825,10 +825,8 @@ return function(vk)
 	---@param descriptorSets vk.ffi.DescriptorSet[]
 	---@param dynamicOffsetCount number
 	---@param dynamicOffsets ffi.cdata*?
-	function VKDevice:cmdBindDescriptorSets(commandBuffer, pipelineBindPoint, layout, firstSet, descriptorSetCount,
-											descriptorSets, dynamicOffsetCount, dynamicOffsets)
-		self.v1_0.vkCmdBindDescriptorSets(commandBuffer, pipelineBindPoint, layout, firstSet, descriptorSetCount,
-			descriptorSets, dynamicOffsetCount, dynamicOffsets)
+	function VKDevice:cmdBindDescriptorSets(commandBuffer, pipelineBindPoint, layout, firstSet, descriptorSetCount, descriptorSets, dynamicOffsetCount, dynamicOffsets)
+		self.v1_0.vkCmdBindDescriptorSets(commandBuffer, pipelineBindPoint, layout, firstSet, descriptorSetCount, descriptorSets, dynamicOffsetCount, dynamicOffsets)
 	end
 
 	---@param commandBuffer vk.ffi.CommandBuffer
@@ -893,12 +891,8 @@ return function(vk)
 	---@param pImageMemoryBarriers ffi.cdata*?
 	---@param memoryBarrierCount number?
 	---@param pMemoryBarriers ffi.cdata*?
-	function VKDevice:cmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, imageMemoryBarrierCount,
-										 pImageMemoryBarriers, memoryBarrierCount, pMemoryBarriers)
-		self.v1_0.vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, 0,
-			memoryBarrierCount or 0, pMemoryBarriers,
-			0, nil,
-			imageMemoryBarrierCount, pImageMemoryBarriers)
+	function VKDevice:cmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, imageMemoryBarrierCount, pImageMemoryBarriers, memoryBarrierCount, pMemoryBarriers)
+		self.v1_0.vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, 0, memoryBarrierCount or 0, pMemoryBarriers, 0, nil, imageMemoryBarrierCount, pImageMemoryBarriers)
 	end
 
 	---@param count number
@@ -1009,8 +1003,7 @@ return function(vk)
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.Semaphore
 	function VKDevice:createSemaphore(info, allocator)
-		local createInfo = vk.SemaphoreCreateInfo(info)
-		local result = self.v1_0.vkCreateSemaphore(self.handle, createInfo, allocator, semaphore)
+		local result = self.v1_0.vkCreateSemaphore(self.handle, vk.SemaphoreCreateInfo(info), allocator, semaphore)
 		if result ~= 0 then
 			error("Failed to create Vulkan semaphore, error code: " .. tostring(result))
 		end
@@ -1023,8 +1016,7 @@ return function(vk)
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.Fence
 	function VKDevice:createFence(info, allocator)
-		local createInfo = vk.FenceCreateInfo(info)
-		local result = self.v1_0.vkCreateFence(self.handle, createInfo, allocator, fence)
+		local result = self.v1_0.vkCreateFence(self.handle, vk.FenceCreateInfo(info), allocator, fence)
 		if result ~= 0 then
 			error("Failed to create Vulkan fence, error code: " .. tostring(result))
 		end
@@ -1051,10 +1043,11 @@ return function(vk)
 		return swapchain[0]
 	end
 
+	local count = ffi.new("uint32_t[1]")
+
 	---@param swapchain vk.ffi.SwapchainKHR
 	---@return vk.ffi.Image[]
 	function VKDevice:getSwapchainImagesKHR(swapchain)
-		local count = ffi.new("uint32_t[1]")
 		local result = self.v1_0.vkGetSwapchainImagesKHR(self.handle, swapchain, count, nil)
 		if result ~= 0 then
 			error("Failed to get swapchain image count, error code: " .. tostring(result))
@@ -1083,8 +1076,7 @@ return function(vk)
 	---@return vk.Result result
 	---@return number imageIndex
 	function VKDevice:acquireNextImageKHR(swapchain, timeout, semaphore, fence)
-		return self.v1_0.vkAcquireNextImageKHR(self.handle, swapchain, timeout, semaphore or 0, fence or 0, imageIndex),
-			imageIndex[0]
+		return self.v1_0.vkAcquireNextImageKHR(self.handle, swapchain, timeout, semaphore or 0, fence or 0, imageIndex), imageIndex[0]
 	end
 
 	do
