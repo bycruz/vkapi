@@ -74,9 +74,10 @@ return function(vk)
 		return VKDevice.new(device[0])
 	end
 
+	local deviceCount = ffi.new("uint32_t[1]", 0)
+
 	---@return vk.ffi.PhysicalDevice[]
 	function VKInstance:enumeratePhysicalDevices()
-		local deviceCount = ffi.new("uint32_t[1]", 0)
 		local result = self.v1_0.vkEnumeratePhysicalDevices(self.handle, deviceCount, nil)
 		if result ~= 0 then
 			error("Failed to enumerate physical devices, error code: " .. tostring(result))
@@ -102,9 +103,7 @@ return function(vk)
 	---@param allocator ffi.cdata*?
 	---@return vk.ffi.SurfaceKHR
 	function VKInstance:createXlibSurfaceKHR(createInfo, allocator)
-		local createInfo = vk.XlibSurfaceCreateInfoKHR(createInfo)
-
-		local result = self.v1_0.vkCreateXlibSurfaceKHR(self.handle, createInfo, allocator, surface)
+		local result = self.v1_0.vkCreateXlibSurfaceKHR(self.handle, vk.XlibSurfaceCreateInfoKHR(createInfo), allocator, surface)
 		if result ~= 0 then
 			error("Failed to create Xlib surface, error code: " .. tostring(result))
 		end
