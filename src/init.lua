@@ -270,12 +270,12 @@ do
 	---@field enabledLayerNames string[]
 	---@field enabledExtensionNames vk.InstanceExtensionName[]
 
+	local instance = ffi.new("VkInstance[1]")
+
 	---@param info vk.InstanceCreateInfo
 	---@param allocator ffi.cdata*?
 	---@return vk.Instance
 	function vk.createInstance(info, allocator)
-		local instance = ffi.new("VkInstance[1]")
-
 		local layerCount = info.enabledLayerNames and #info.enabledLayerNames or 0
 		local layerNames = ffi.new("const char*[?]", math.max(layerCount, 1))
 		for i = 1, layerCount do
@@ -354,11 +354,12 @@ do
 		return capabilities --[[@as vk.ffi.SurfaceCapabilitiesKHR]]
 	end
 
+	local count = ffi.new("uint32_t[1]")
+
 	---@param physicalDevice vk.ffi.PhysicalDevice
 	---@param surface vk.ffi.SurfaceKHR
 	---@return vk.ffi.SurfaceFormatKHR[]
 	function vk.getPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface)
-		local count = ffi.new("uint32_t[1]")
 		local result = C.vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, count, nil)
 		if result ~= 0 then
 			error("Failed to get surface format count, error code: " .. tostring(result))
@@ -381,7 +382,6 @@ do
 	---@param surface vk.ffi.SurfaceKHR
 	---@return vk.PresentModeKHR[]
 	function vk.getPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface)
-		local count = ffi.new("uint32_t[1]")
 		local result = C.vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, count, nil)
 		if result ~= 0 then
 			error("Failed to get present mode count, error code: " .. tostring(result))
