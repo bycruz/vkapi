@@ -228,6 +228,22 @@ rpBeginInfo.renderPass = renderPass
 rpBeginInfo.clearValueCount = 2
 rpBeginInfo.pClearValues = clearValues
 
+-- Swapchain create info, allocated once as an ffi struct and reused for every
+-- (re)creation. vkCreateSwapchainKHR takes the struct directly, so a Lua table
+-- is neither accepted nor desirable here.
+local swapchainInfo = vk.SwapchainCreateInfoKHR()
+swapchainInfo.surface = surface
+swapchainInfo.minImageCount = 3
+swapchainInfo.imageFormat = desiredFormat
+swapchainInfo.imageColorSpace = vk.ColorSpaceKHR.SRGB_NONLINEAR
+swapchainInfo.imageArrayLayers = 1
+swapchainInfo.imageUsage = vk.ImageUsageFlagBits.COLOR_ATTACHMENT
+swapchainInfo.imageSharingMode = vk.SharingMode.EXCLUSIVE
+swapchainInfo.preTransform = vk.SurfaceTransformFlagBitsKHR.IDENTITY
+swapchainInfo.compositeAlpha = vk.CompositeAlphaFlagBitsKHR.OPAQUE
+swapchainInfo.presentMode = vk.PresentModeKHR.IMMEDIATE
+swapchainInfo.clipped = 1
+
 ---@param oldSwapchain vk.ffi.SwapchainKHR?
 ---@return vk.ffi.SwapchainKHR
 local function buildSwapchain(oldSwapchain)
@@ -241,21 +257,14 @@ local function buildSwapchain(oldSwapchain)
 
 	depthImage, depthMemory, depthImageView = createDepthResources(W, H)
 
-	local sc = device:createSwapchainKHR({
-		surface = surface,
-		minImageCount = 3,
-		imageFormat = desiredFormat,
-		imageColorSpace = vk.ColorSpaceKHR.SRGB_NONLINEAR,
-		imageExtent = { width = W, height = H },
-		imageArrayLayers = 1,
-		imageUsage = vk.ImageUsageFlagBits.COLOR_ATTACHMENT,
-		imageSharingMode = vk.SharingMode.EXCLUSIVE,
-		preTransform = vk.SurfaceTransformFlagBitsKHR.IDENTITY,
-		compositeAlpha = vk.CompositeAlphaFlagBitsKHR.OPAQUE,
-		presentMode = vk.PresentModeKHR.IMMEDIATE,
-		clipped = 1,
-		oldSwapchain = oldSwapchain,
-	})
+	-- Reuse one ffi struct across swapchain recreations: only the fields that
+	-- actually change (extent, oldSwapchain) are rewritten, so no table or
+	-- struct is allocated per rebuild.
+	swapchainInfo.imageExtent.width = W
+	swapchainInfo.imageExtent.height = H
+	swapchainInfo.oldSwapchain = oldSwapchain or 0
+
+	local sc = device:createSwapchainKHR(swapchainInfo)
 	if oldSwapchain then device:destroySwapchainKHR(oldSwapchain) end
 
 	imageViews = {}
