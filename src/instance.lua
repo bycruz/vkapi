@@ -134,20 +134,40 @@ return function(vk)
 	---@field vkCreateXlibSurfaceKHR fun(instance: vk.ffi.Instance, info: ffi.cdata*, allocator: ffi.cdata*?, surface: ffi.cdata*): vk.ffi.Result
 	---@field vkCreateWin32SurfaceKHR fun(instance: vk.ffi.Instance, info: vk.ffi.Win32SurfaceCreateInfoKHR, allocator: ffi.cdata*?, surface: ffi.cdata*): vk.ffi.Result
 
+	---@format disable-next
+	local v1_0Types = {
+		vkCreateDevice = "VkResult(*)(VkPhysicalDevice, const VkDeviceCreateInfo*, const void*, VkDevice*)",
+		vkEnumeratePhysicalDevices = "VkResult(*)(VkInstance, uint32_t*, VkPhysicalDevice*)",
+		vkCreateXlibSurfaceKHR = "VkResult(*)(VkInstance, const VkXlibSurfaceCreateInfoKHR*, const VkAllocationCallbacks*, VkSurfaceKHR*)",
+		vkCreateWin32SurfaceKHR = "VkResult(*)(VkInstance, const VkWin32SurfaceCreateInfoKHR*, const VkAllocationCallbacks*, VkSurfaceKHR*)"
+	}
+
+	-- See the note in device.lua: function-type strings are not interned by
+	-- LuaJIT, so parsing them on every instance creation leaks ctype ids.
+	---@type table<string, ffi.ctype>
+	local v1_0Ctypes
+
+	---@return table<string, ffi.ctype>
+	local function getV1_0Ctypes()
+		local ctypes = v1_0Ctypes
+		if not ctypes then
+			ctypes = {}
+			for name, funcType in pairs(v1_0Types) do
+				ctypes[name] = ffi.typeof(funcType)
+			end
+			v1_0Ctypes = ctypes
+		end
+		return ctypes
+	end
+
 	---@param handle vk.ffi.Instance
 	function VKInstance.new(handle)
-		---@format disable-next
-		local v1_0Types = {
-			vkCreateDevice = "VkResult(*)(VkPhysicalDevice, const VkDeviceCreateInfo*, const void*, VkDevice*)",
-			vkEnumeratePhysicalDevices = "VkResult(*)(VkInstance, uint32_t*, VkPhysicalDevice*)",
-			vkCreateXlibSurfaceKHR = "VkResult(*)(VkInstance, const VkXlibSurfaceCreateInfoKHR*, const VkAllocationCallbacks*, VkSurfaceKHR*)",
-			vkCreateWin32SurfaceKHR = "VkResult(*)(VkInstance, const VkWin32SurfaceCreateInfoKHR*, const VkAllocationCallbacks*, VkSurfaceKHR*)"
-		}
+		local ctypes = getV1_0Ctypes()
 
 		---@type vk.Instance.Fns
 		local v1_0 = {}
-		for name, funcType in pairs(v1_0Types) do
-			v1_0[name] = ffi.cast(funcType, vk.getInstanceProcAddr(handle, name))
+		for name, ctype in pairs(ctypes) do
+			v1_0[name] = ffi.cast(ctype, vk.getInstanceProcAddr(handle, name))
 		end
 
 		return setmetatable({

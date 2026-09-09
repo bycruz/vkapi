@@ -1183,87 +1183,111 @@ return function(vk)
 	---@field vkResetCommandPool fun(device: vk.ffi.Device, commandPool: vk.ffi.CommandPool, flags: vk.CommandPoolResetFlagBits): vk.ffi.Result
 	---@field vkResetCommandBuffer fun(commandBuffer: vk.ffi.CommandBuffer, flags: vk.CommandBufferResetFlagBits): vk.ffi.Result
 
+	---@format disable-next
+	local v1_0Types = {
+		vkCreateBuffer = "VkResult(*)(VkDevice, const VkBufferCreateInfo*, const VkAllocationCallbacks*, VkBuffer*)",
+		vkCreateShaderModule = "VkResult(*)(VkDevice, const VkShaderModuleCreateInfo*, const VkAllocationCallbacks*, VkShaderModule*)",
+		vkCreatePipelineLayout = "VkResult(*)(VkDevice, const VkPipelineLayoutCreateInfo*, const VkAllocationCallbacks*, VkPipelineLayout*)",
+		vkCreateGraphicsPipelines = "VkResult(*)(VkDevice, uint64_t, uint32_t, const VkGraphicsPipelineCreateInfo*, const VkAllocationCallbacks*, VkPipeline*)",
+		vkCreateRenderPass = "VkResult(*)(VkDevice, const VkRenderPassCreateInfo*, const VkAllocationCallbacks*, VkRenderPass*)",
+		vkCreateImageView = "VkResult(*)(VkDevice, const VkImageViewCreateInfo*, const VkAllocationCallbacks*, VkImageView*)",
+		vkCreateFramebuffer = "VkResult(*)(VkDevice, const VkFramebufferCreateInfo*, const VkAllocationCallbacks*, VkFramebuffer*)",
+		vkGetBufferMemoryRequirements = "void(*)(VkDevice, VkBuffer, VkMemoryRequirements*)",
+		vkGetImageMemoryRequirements = "void(*)(VkDevice, VkImage, VkMemoryRequirements*)",
+		vkCreateImage = "VkResult(*)(VkDevice, const VkImageCreateInfo*, const VkAllocationCallbacks*, VkImage*)",
+		vkBindImageMemory = "VkResult(*)(VkDevice, VkImage, VkDeviceMemory, VkDeviceSize)",
+		vkAllocateMemory = "VkResult(*)(VkDevice, const VkMemoryAllocateInfo*, const VkAllocationCallbacks*, VkDeviceMemory*)",
+		vkBindBufferMemory = "VkResult(*)(VkDevice, VkBuffer, VkDeviceMemory, VkDeviceSize)",
+		vkMapMemory = "VkResult(*)(VkDevice, VkDeviceMemory, VkDeviceSize, VkDeviceSize, VkFlags, void**)",
+		vkUnmapMemory = "void(*)(VkDevice, VkDeviceMemory)",
+		vkCreateCommandPool = "VkResult(*)(VkDevice, const VkCommandPoolCreateInfo*, const VkAllocationCallbacks*, VkCommandPool*)",
+		vkCreateDescriptorSetLayout = "VkResult(*)(VkDevice, const VkDescriptorSetLayoutCreateInfo*, const VkAllocationCallbacks*, VkDescriptorSetLayout*)",
+		vkCreateDescriptorPool = "VkResult(*)(VkDevice, const VkDescriptorPoolCreateInfo*, const VkAllocationCallbacks*, VkDescriptorPool*)",
+		vkAllocateDescriptorSets = "VkResult(*)(VkDevice, const VkDescriptorSetAllocateInfo*, VkDescriptorSet*)",
+		vkUpdateDescriptorSets = "void(*)(VkDevice, uint32_t, const VkWriteDescriptorSet*, uint32_t, const void*)",
+		vkAllocateCommandBuffers = "VkResult(*)(VkDevice, const VkCommandBufferAllocateInfo*, VkCommandBuffer*)",
+		vkBeginCommandBuffer = "VkResult(*)(VkCommandBuffer, const VkCommandBufferBeginInfo*)",
+		vkEndCommandBuffer = "VkResult(*)(VkCommandBuffer)",
+		vkCmdBeginRenderPass = "void(*)(VkCommandBuffer, const VkRenderPassBeginInfo*, VkSubpassContents)",
+		vkCmdEndRenderPass = "void(*)(VkCommandBuffer)",
+		vkCmdBindPipeline = "void(*)(VkCommandBuffer, VkPipelineBindPoint, VkPipeline)",
+		vkCmdDraw = "void(*)(VkCommandBuffer, uint32_t, uint32_t, uint32_t, uint32_t)",
+		vkCmdBindDescriptorSets = "void(*)(VkCommandBuffer, VkPipelineBindPoint, VkPipelineLayout, uint32_t, uint32_t, const VkDescriptorSet*, uint32_t, const uint32_t*)",
+		vkCmdCopyBufferToImage = "void(*)(VkCommandBuffer, VkBuffer, VkImage, VkImageLayout, uint32_t, const VkBufferImageCopy*)",
+		vkCmdCopyImageToBuffer = "void(*)(VkCommandBuffer, VkImage, VkImageLayout, VkBuffer, uint32_t, const VkBufferImageCopy*)",
+		vkCmdCopyBuffer = "void(*)(VkCommandBuffer, VkBuffer, VkBuffer, uint32_t, const VkBufferCopy*)",
+		vkCmdUpdateBuffer = "void(*)(VkCommandBuffer, VkBuffer, VkDeviceSize, VkDeviceSize, const void*)",
+		vkCmdSetViewport = "void(*)(VkCommandBuffer, uint32_t, uint32_t, const VkViewport*)",
+		vkCmdSetScissor = "void(*)(VkCommandBuffer, uint32_t, uint32_t, const VkRect2D*)",
+		vkCmdBindVertexBuffers = "void(*)(VkCommandBuffer, uint32_t, uint32_t, const VkBuffer*, const VkDeviceSize*)",
+		vkCmdBindIndexBuffer = "void(*)(VkCommandBuffer, VkBuffer, VkDeviceSize, VkIndexType)",
+		vkCmdDrawIndexed = "void(*)(VkCommandBuffer, uint32_t, uint32_t, uint32_t, int32_t, uint32_t)",
+		vkQueueSubmit = "VkResult(*)(VkQueue, uint32_t, const VkSubmitInfo*, uint64_t)",
+		vkQueueWaitIdle = "VkResult(*)(VkQueue)",
+		vkGetDeviceQueue = "void(*)(VkDevice, uint32_t, uint32_t, VkQueue*)",
+		vkCreateSemaphore = "VkResult(*)(VkDevice, const VkSemaphoreCreateInfo*, const VkAllocationCallbacks*, VkSemaphore*)",
+		vkCreateFence = "VkResult(*)(VkDevice, const VkFenceCreateInfo*, const VkAllocationCallbacks*, VkFence*)",
+		vkWaitForFences = "VkResult(*)(VkDevice, uint32_t, const VkFence*, VkBool32, uint64_t)",
+		vkResetFences = "VkResult(*)(VkDevice, uint32_t, const VkFence*)",
+		vkCreateSwapchainKHR = "VkResult(*)(VkDevice, const VkSwapchainCreateInfoKHR*, const VkAllocationCallbacks*, VkSwapchainKHR*)",
+		vkGetSwapchainImagesKHR = "VkResult(*)(VkDevice, VkSwapchainKHR, uint32_t*, VkImage*)",
+		vkAcquireNextImageKHR = "VkResult(*)(VkDevice, VkSwapchainKHR, uint64_t, VkSemaphore, VkFence, uint32_t*)",
+		vkQueuePresentKHR = "VkResult(*)(VkQueue, const VkPresentInfoKHR*)",
+		vkCreateSampler = "VkResult(*)(VkDevice, const VkSamplerCreateInfo*, const VkAllocationCallbacks*, VkSampler*)",
+		vkDestroySampler = "void(*)(VkDevice, VkSampler, const VkAllocationCallbacks*)",
+		vkDestroyDescriptorPool = "void(*)(VkDevice, VkDescriptorPool, const VkAllocationCallbacks*)",
+		vkDestroyDescriptorSetLayout = "void(*)(VkDevice, VkDescriptorSetLayout, const VkAllocationCallbacks*)",
+		vkDestroyImageView = "void(*)(VkDevice, VkImageView, const VkAllocationCallbacks*)",
+		vkDestroyFramebuffer = "void(*)(VkDevice, VkFramebuffer, const VkAllocationCallbacks*)",
+		vkDestroyCommandPool = "void(*)(VkDevice, VkCommandPool, const VkAllocationCallbacks*)",
+		vkDestroyShaderModule = "void(*)(VkDevice, VkShaderModule, const VkAllocationCallbacks*)",
+		vkDestroyFence = "void(*)(VkDevice, VkFence, const VkAllocationCallbacks*)",
+		vkDestroySemaphore = "void(*)(VkDevice, VkSemaphore, const VkAllocationCallbacks*)",
+		vkDestroySwapchainKHR = "void(*)(VkDevice, VkSwapchainKHR, const VkAllocationCallbacks*)",
+		vkDestroyBuffer = "void(*)(VkDevice, VkBuffer, const VkAllocationCallbacks*)",
+		vkDestroyImage = "void(*)(VkDevice, VkImage, const VkAllocationCallbacks*)",
+		vkDestroyPipeline = "void(*)(VkDevice, VkPipeline, const VkAllocationCallbacks*)",
+		vkDestroyPipelineLayout = "void(*)(VkDevice, VkPipelineLayout, const VkAllocationCallbacks*)",
+		vkFreeMemory = "void(*)(VkDevice, VkDeviceMemory, const VkAllocationCallbacks*)",
+		vkResetCommandPool = "VkResult(*)(VkDevice, VkCommandPool, VkFlags)",
+		vkResetCommandBuffer = "VkResult(*)(VkCommandBuffer, VkFlags)",
+		vkCmdPipelineBarrier = "void(*)(VkCommandBuffer, VkFlags, VkFlags, VkFlags, uint32_t, const void*, uint32_t, const void*, uint32_t, const VkImageMemoryBarrier*)",
+		vkCreateComputePipelines = "VkResult(*)(VkDevice, uint64_t, uint32_t, const VkComputePipelineCreateInfo*, const VkAllocationCallbacks*, VkPipeline*)",
+		vkCmdDispatch = "void(*)(VkCommandBuffer, uint32_t, uint32_t, uint32_t)",
+		vkCmdPushConstants = "void(*)(VkCommandBuffer, VkPipelineLayout, VkShaderStageFlags, uint32_t, uint32_t, const void*)",
+		vkDestroyRenderPass = "void(*)(VkDevice, VkRenderPass, const VkAllocationCallbacks*)",
+	}
+
+	-- LuaJIT does not intern function-type strings: every ffi.typeof/ffi.cast
+	-- with one parses a fresh ctype and permanently consumes an id from a fixed
+	-- pool (~32k for the whole process). Casting the signatures above on every
+	-- device creation therefore leaks ids until the process dies with
+	-- "table overflow" (~153 devices), and costs ~230us per device. Parse each
+	-- signature exactly once, then reuse the ctype objects (~14ns per cast).
+	---@type table<string, ffi.ctype>
+	local v1_0Ctypes
+
+	---@return table<string, ffi.ctype>
+	local function getV1_0Ctypes()
+		local ctypes = v1_0Ctypes
+		if not ctypes then
+			ctypes = {}
+			for name, funcType in pairs(v1_0Types) do
+				ctypes[name] = ffi.typeof(funcType)
+			end
+			v1_0Ctypes = ctypes
+		end
+		return ctypes
+	end
+
 	---@param handle vk.ffi.Device
 	function VKDevice.new(handle)
-		---@format disable-next
-		local v1_0Types = {
-			vkCreateBuffer = "VkResult(*)(VkDevice, const VkBufferCreateInfo*, const VkAllocationCallbacks*, VkBuffer*)",
-			vkCreateShaderModule = "VkResult(*)(VkDevice, const VkShaderModuleCreateInfo*, const VkAllocationCallbacks*, VkShaderModule*)",
-			vkCreatePipelineLayout = "VkResult(*)(VkDevice, const VkPipelineLayoutCreateInfo*, const VkAllocationCallbacks*, VkPipelineLayout*)",
-			vkCreateGraphicsPipelines = "VkResult(*)(VkDevice, uint64_t, uint32_t, const VkGraphicsPipelineCreateInfo*, const VkAllocationCallbacks*, VkPipeline*)",
-			vkCreateRenderPass = "VkResult(*)(VkDevice, const VkRenderPassCreateInfo*, const VkAllocationCallbacks*, VkRenderPass*)",
-			vkCreateImageView = "VkResult(*)(VkDevice, const VkImageViewCreateInfo*, const VkAllocationCallbacks*, VkImageView*)",
-			vkCreateFramebuffer = "VkResult(*)(VkDevice, const VkFramebufferCreateInfo*, const VkAllocationCallbacks*, VkFramebuffer*)",
-			vkGetBufferMemoryRequirements = "void(*)(VkDevice, VkBuffer, VkMemoryRequirements*)",
-			vkGetImageMemoryRequirements = "void(*)(VkDevice, VkImage, VkMemoryRequirements*)",
-			vkCreateImage = "VkResult(*)(VkDevice, const VkImageCreateInfo*, const VkAllocationCallbacks*, VkImage*)",
-			vkBindImageMemory = "VkResult(*)(VkDevice, VkImage, VkDeviceMemory, VkDeviceSize)",
-			vkAllocateMemory = "VkResult(*)(VkDevice, const VkMemoryAllocateInfo*, const VkAllocationCallbacks*, VkDeviceMemory*)",
-			vkBindBufferMemory = "VkResult(*)(VkDevice, VkBuffer, VkDeviceMemory, VkDeviceSize)",
-			vkMapMemory = "VkResult(*)(VkDevice, VkDeviceMemory, VkDeviceSize, VkDeviceSize, VkFlags, void**)",
-			vkUnmapMemory = "void(*)(VkDevice, VkDeviceMemory)",
-			vkCreateCommandPool = "VkResult(*)(VkDevice, const VkCommandPoolCreateInfo*, const VkAllocationCallbacks*, VkCommandPool*)",
-			vkCreateDescriptorSetLayout = "VkResult(*)(VkDevice, const VkDescriptorSetLayoutCreateInfo*, const VkAllocationCallbacks*, VkDescriptorSetLayout*)",
-			vkCreateDescriptorPool = "VkResult(*)(VkDevice, const VkDescriptorPoolCreateInfo*, const VkAllocationCallbacks*, VkDescriptorPool*)",
-			vkAllocateDescriptorSets = "VkResult(*)(VkDevice, const VkDescriptorSetAllocateInfo*, VkDescriptorSet*)",
-			vkUpdateDescriptorSets = "void(*)(VkDevice, uint32_t, const VkWriteDescriptorSet*, uint32_t, const void*)",
-			vkAllocateCommandBuffers = "VkResult(*)(VkDevice, const VkCommandBufferAllocateInfo*, VkCommandBuffer*)",
-			vkBeginCommandBuffer = "VkResult(*)(VkCommandBuffer, const VkCommandBufferBeginInfo*)",
-			vkEndCommandBuffer = "VkResult(*)(VkCommandBuffer)",
-			vkCmdBeginRenderPass = "void(*)(VkCommandBuffer, const VkRenderPassBeginInfo*, VkSubpassContents)",
-			vkCmdEndRenderPass = "void(*)(VkCommandBuffer)",
-			vkCmdBindPipeline = "void(*)(VkCommandBuffer, VkPipelineBindPoint, VkPipeline)",
-			vkCmdDraw = "void(*)(VkCommandBuffer, uint32_t, uint32_t, uint32_t, uint32_t)",
-			vkCmdBindDescriptorSets = "void(*)(VkCommandBuffer, VkPipelineBindPoint, VkPipelineLayout, uint32_t, uint32_t, const VkDescriptorSet*, uint32_t, const uint32_t*)",
-			vkCmdCopyBufferToImage = "void(*)(VkCommandBuffer, VkBuffer, VkImage, VkImageLayout, uint32_t, const VkBufferImageCopy*)",
-			vkCmdCopyImageToBuffer = "void(*)(VkCommandBuffer, VkImage, VkImageLayout, VkBuffer, uint32_t, const VkBufferImageCopy*)",
-			vkCmdCopyBuffer = "void(*)(VkCommandBuffer, VkBuffer, VkBuffer, uint32_t, const VkBufferCopy*)",
-			vkCmdUpdateBuffer = "void(*)(VkCommandBuffer, VkBuffer, VkDeviceSize, VkDeviceSize, const void*)",
-			vkCmdSetViewport = "void(*)(VkCommandBuffer, uint32_t, uint32_t, const VkViewport*)",
-			vkCmdSetScissor = "void(*)(VkCommandBuffer, uint32_t, uint32_t, const VkRect2D*)",
-			vkCmdBindVertexBuffers = "void(*)(VkCommandBuffer, uint32_t, uint32_t, const VkBuffer*, const VkDeviceSize*)",
-			vkCmdBindIndexBuffer = "void(*)(VkCommandBuffer, VkBuffer, VkDeviceSize, VkIndexType)",
-			vkCmdDrawIndexed = "void(*)(VkCommandBuffer, uint32_t, uint32_t, uint32_t, int32_t, uint32_t)",
-			vkQueueSubmit = "VkResult(*)(VkQueue, uint32_t, const VkSubmitInfo*, uint64_t)",
-			vkQueueWaitIdle = "VkResult(*)(VkQueue)",
-			vkGetDeviceQueue = "void(*)(VkDevice, uint32_t, uint32_t, VkQueue*)",
-			vkCreateSemaphore = "VkResult(*)(VkDevice, const VkSemaphoreCreateInfo*, const VkAllocationCallbacks*, VkSemaphore*)",
-			vkCreateFence = "VkResult(*)(VkDevice, const VkFenceCreateInfo*, const VkAllocationCallbacks*, VkFence*)",
-			vkWaitForFences = "VkResult(*)(VkDevice, uint32_t, const VkFence*, VkBool32, uint64_t)",
-			vkResetFences = "VkResult(*)(VkDevice, uint32_t, const VkFence*)",
-			vkCreateSwapchainKHR = "VkResult(*)(VkDevice, const VkSwapchainCreateInfoKHR*, const VkAllocationCallbacks*, VkSwapchainKHR*)",
-			vkGetSwapchainImagesKHR = "VkResult(*)(VkDevice, VkSwapchainKHR, uint32_t*, VkImage*)",
-			vkAcquireNextImageKHR = "VkResult(*)(VkDevice, VkSwapchainKHR, uint64_t, VkSemaphore, VkFence, uint32_t*)",
-			vkQueuePresentKHR = "VkResult(*)(VkQueue, const VkPresentInfoKHR*)",
-			vkCreateSampler = "VkResult(*)(VkDevice, const VkSamplerCreateInfo*, const VkAllocationCallbacks*, VkSampler*)",
-			vkDestroySampler = "void(*)(VkDevice, VkSampler, const VkAllocationCallbacks*)",
-			vkDestroyDescriptorPool = "void(*)(VkDevice, VkDescriptorPool, const VkAllocationCallbacks*)",
-			vkDestroyDescriptorSetLayout = "void(*)(VkDevice, VkDescriptorSetLayout, const VkAllocationCallbacks*)",
-			vkDestroyImageView = "void(*)(VkDevice, VkImageView, const VkAllocationCallbacks*)",
-			vkDestroyFramebuffer = "void(*)(VkDevice, VkFramebuffer, const VkAllocationCallbacks*)",
-			vkDestroyCommandPool = "void(*)(VkDevice, VkCommandPool, const VkAllocationCallbacks*)",
-			vkDestroyShaderModule = "void(*)(VkDevice, VkShaderModule, const VkAllocationCallbacks*)",
-			vkDestroyFence = "void(*)(VkDevice, VkFence, const VkAllocationCallbacks*)",
-			vkDestroySemaphore = "void(*)(VkDevice, VkSemaphore, const VkAllocationCallbacks*)",
-			vkDestroySwapchainKHR = "void(*)(VkDevice, VkSwapchainKHR, const VkAllocationCallbacks*)",
-			vkDestroyBuffer = "void(*)(VkDevice, VkBuffer, const VkAllocationCallbacks*)",
-			vkDestroyImage = "void(*)(VkDevice, VkImage, const VkAllocationCallbacks*)",
-			vkDestroyPipeline = "void(*)(VkDevice, VkPipeline, const VkAllocationCallbacks*)",
-			vkDestroyPipelineLayout = "void(*)(VkDevice, VkPipelineLayout, const VkAllocationCallbacks*)",
-			vkFreeMemory = "void(*)(VkDevice, VkDeviceMemory, const VkAllocationCallbacks*)",
-			vkResetCommandPool = "VkResult(*)(VkDevice, VkCommandPool, VkFlags)",
-			vkResetCommandBuffer = "VkResult(*)(VkCommandBuffer, VkFlags)",
-			vkCmdPipelineBarrier = "void(*)(VkCommandBuffer, VkFlags, VkFlags, VkFlags, uint32_t, const void*, uint32_t, const void*, uint32_t, const VkImageMemoryBarrier*)",
-			vkCreateComputePipelines = "VkResult(*)(VkDevice, uint64_t, uint32_t, const VkComputePipelineCreateInfo*, const VkAllocationCallbacks*, VkPipeline*)",
-			vkCmdDispatch = "void(*)(VkCommandBuffer, uint32_t, uint32_t, uint32_t)",
-			vkCmdPushConstants = "void(*)(VkCommandBuffer, VkPipelineLayout, VkShaderStageFlags, uint32_t, uint32_t, const void*)",
-			vkDestroyRenderPass = "void(*)(VkDevice, VkRenderPass, const VkAllocationCallbacks*)",
-		}
+		local ctypes = getV1_0Ctypes()
 
 		---@type vk.Device.Fns
 		local v1_0 = {}
-		for name, funcType in pairs(v1_0Types) do
-			v1_0[name] = ffi.cast(funcType, vk.getDeviceProcAddr(handle, name))
+		for name, ctype in pairs(ctypes) do
+			v1_0[name] = ffi.cast(ctype, vk.getDeviceProcAddr(handle, name))
 		end
 
 		return setmetatable({
